@@ -7,7 +7,7 @@ import { DIFFICULTY_PROFILES } from "../data/difficulty";
 import { assignStartingClub, type ClubTier } from "./clubAssignment";
 import { makeRng, clamp, type Rng } from "./rng";
 import { simulatePlayerSeason } from "./playerPerformance";
-import { applyChoice, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
+import { applyChoice, EVENT_MEMORY, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
 import { computeAwards } from "./awards";
 import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
@@ -105,6 +105,9 @@ export function resolveEvent(
       assists: Math.max(0, state.seasonStats.assists + outcome.assistsBoost),
     },
     events: [...state.events, outcome],
+    // Memoria de eventos: evita que el mismo repertorio se repita cada
+    // temporada. Se conserva entre temporadas, no se reinicia con ellas.
+    recentEventKeys: [...(state.recentEventKeys ?? []), template.key].slice(-EVENT_MEMORY),
     currentSeasonEventsRemaining: Math.max(0, state.currentSeasonEventsRemaining - 1),
   };
   return { state: newState, outcome };

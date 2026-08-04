@@ -5,8 +5,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Activity, ArrowRight, Check, Dices, Goal, Heart, Minus, Star,
-  TrendingDown, TrendingUp, X, Zap,
+  Activity, ArrowRight, Check, Dices, Goal, Heart, Star, X, Zap,
 } from "lucide-react";
 import type { AppliedEventOutcome, CareerState, EventChoice, EventTemplate } from "@/lib/data/types";
 import { effectiveSuccessChance } from "@/lib/engine/events";
@@ -103,10 +102,10 @@ function ChoiceList({
     <>
       <div className="mt-1 space-y-2">
         {event.choices.map(c => {
+          // Solo se muestra la probabilidad de las apuestas. El resultado de
+          // cada opción NO se adelanta: ninguna es la "correcta" y todas
+          // cuestan algo.
           const chance = c.risk ? Math.round(effectiveSuccessChance(c, state) * 100) : null;
-          const q = c.qualityBias;
-          const Icon = q > 0.2 ? TrendingUp : q < -0.2 ? TrendingDown : Minus;
-          const tone = q > 0.2 ? "text-primary" : q < -0.2 ? "text-destructive" : "text-muted-foreground";
 
           return (
             <button
@@ -114,37 +113,31 @@ function ChoiceList({
               onClick={() => onChoose(c)}
               className="w-full rounded-xl border border-border p-3 text-left transition-colors hover:border-primary/50 hover:bg-white/5"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold">{c.label}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{c.description}</div>
+              <div className="font-semibold">{c.label}</div>
+              <div className="mt-1 text-xs text-muted-foreground">{c.description}</div>
 
-                  {chance === null ? (
-                    <div className="mt-2 text-xs italic text-muted-foreground">→ {c.outcomeSummary}</div>
-                  ) : (
-                    <div className="mt-2.5">
-                      <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
-                        <Dices className="h-3.5 w-3.5 text-accent" />
-                        <span className="text-accent">Apuesta</span>
-                        <span className="text-muted-foreground">·</span>
-                        <span className={chanceTone(chance)}>{chance}% de éxito</span>
-                      </div>
-                      <div className="flex h-1.5 overflow-hidden rounded-full bg-destructive/40">
-                        <div className="bg-primary" style={{ width: `${chance}%` }} />
-                      </div>
-                    </div>
-                  )}
+              {chance !== null && (
+                <div className="mt-2.5">
+                  <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider">
+                    <Dices className="h-3.5 w-3.5 text-accent" />
+                    <span className="text-accent">Apuesta</span>
+                    <span className="text-muted-foreground">·</span>
+                    <span className={chanceTone(chance)}>{chance}% de éxito</span>
+                  </div>
+                  <div className="flex h-1.5 overflow-hidden rounded-full bg-destructive/40">
+                    <div className="bg-primary" style={{ width: `${chance}%` }} />
+                  </div>
                 </div>
-                {chance === null && <Icon className={cn("h-5 w-5 shrink-0", tone)} />}
-              </div>
+              )}
             </button>
           );
         })}
       </div>
 
       <p className="mt-1 text-center text-[11px] text-muted-foreground">
-        Las opciones marcadas como <span className="font-bold text-accent">apuesta</span> se
-        juegan a un sorteo. Tu media, reputación, moral o forma inclinan la balanza.
+        Ninguna opción es gratis: todas dan algo y quitan algo. Las marcadas
+        como <span className="font-bold text-accent">apuesta</span> pasan además
+        por un sorteo que tu media, reputación, moral o forma inclinan.
       </p>
     </>
   );

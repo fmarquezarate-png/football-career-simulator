@@ -19,14 +19,21 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
   (élite / grande / mitad de tabla / modesto)
 - Selecciones nacionales + Mundiales cada 4 temporadas
 - Escudos reales de los 96 clubes, servidos en local desde `public/crests/`
-- 10 decisiones narrativas por temporada con 3–5 opciones cada una, resueltas
-  de una en una: eliges → ves el resultado → continúas.
-  - Las opciones normales muestrean sus efectos de una normal cuyo mu es el
-    `qualityBias` de la opción.
+- **45 eventos narrativos** repartidos en once bloques temáticos (cantera,
+  cuerpo técnico, vestuario, prensa, físico, mercado, competición, selección,
+  estrella, veterano y vida personal). El catálogo se filtra por edad, media,
+  reputación, moral, forma y franja del club, así que un canterano de 18 años
+  y un veterano de 33 ven repertorios casi disjuntos. El motor además recuerda
+  los 24 últimos eventos vividos para no repetirlos.
+- 10 decisiones por temporada, resueltas de una en una:
+  eliges → ves el resultado → continúas.
+  - **Ninguna opción es gratis.** Cada elección declara sus efectos por
+    métrica y el 70% mezcla signo positivo y negativo: ganar reputación cuesta
+    moral, ganar media cuesta forma. La interfaz no adelanta el resultado.
   - Las opciones marcadas como **apuesta** pasan antes por un sorteo con
-    probabilidad de éxito explícita, ajustada por tu media, reputación, moral
-    o forma. El resultado se anima en pantalla (ÉXITO / FALLO) y después se
-    muestran los efectos con barras comparativas.
+    probabilidad de éxito explícita (10–85%), ajustada por tu media,
+    reputación, moral o forma. El resultado se anima en pantalla
+    (ÉXITO / FALLO) y después se muestran los efectos con barras comparativas.
 - Trofeos de club (liga, copa, supercopa, Champions) y premios individuales
   (Bota de Oro, MVP, Balón de Oro)
 - Sistema de contratos y ofertas al final de cada temporada

@@ -102,17 +102,27 @@ export interface Contract {
   releaseClause?: number;
 }
 
+export type EffectMetric =
+  | "goals" | "assists" | "morale" | "reputation" | "overall" | "fitness";
+
 /**
- * Apuesta de una elección: en vez de un único sesgo, la opción se juega a un
- * sorteo. El motor tira un dado contra `successChance` y aplica `successBias`
- * o `failureBias` según salga. Las opciones sin `risk` son deterministas en su
- * intención (aunque el resultado siga muestreándose de una normal).
+ * Efectos de una elección, expresados como la media (mu) de cada métrica en
+ * sus propias unidades. El motor muestrea cada una de una normal, así que dos
+ * jugadores con la misma decisión no obtienen lo mismo.
+ *
+ * La clave del diseño: casi ninguna opción es solo positiva. Una opción que
+ * sube la media suele costar forma física o moral, y una que dispara la
+ * reputación puede resentir el juego colectivo. No hay respuesta correcta.
+ */
+export type ChoiceEffects = Partial<Record<EffectMetric, number>>;
+
+/**
+ * Apuesta: la opción se juega a un sorteo antes de aplicar nada. Si sale bien
+ * se aplican los `effects` de la elección; si sale mal, sus `failureEffects`.
  */
 export interface ChoiceRisk {
   /** Probabilidad base de éxito, 0-1. */
   successChance: number;
-  successBias: number;
-  failureBias: number;
   successLabel: string;
   failureLabel: string;
   /** Atributo del jugador que inclina la balanza, si aplica. */
@@ -122,10 +132,36 @@ export interface ChoiceRisk {
 export interface EventChoice {
   key: string;
   label: string;
+  /** Contexto narrativo. No debe adelantar el resultado mecánico. */
   description: string;
-  qualityBias: number;
-  outcomeSummary: string;
+  effects: ChoiceEffects;
+  /** Solo para apuestas: qué pasa si el sorteo sale mal. */
+  failureEffects?: ChoiceEffects;
   risk?: ChoiceRisk;
+}
+
+/**
+ * Filtros de aparición. Cuantos más eventos condicionados haya, menos se
+ * repite el repertorio entre temporadas: un canterano de 18 años y una
+ * estrella de 31 ven catálogos casi disjuntos.
+ */
+export interface EventConditions {
+  minSeason?: number;
+  maxSeason?: number;
+  minAge?: number;
+  maxAge?: number;
+  positions?: Position[];
+  minOverall?: number;
+  maxOverall?: number;
+  minReputation?: number;
+  maxReputation?: number;
+  minMorale?: number;
+  maxMorale?: number;
+  maxFitness?: number;
+  /** Franja del club actual. */
+  tiers?: ("elite" | "grande" | "media" | "modesto")[];
+  /** Requiere haber ganado algo. */
+  minTrophies?: number;
 }
 
 export interface EventTemplate {
@@ -133,7 +169,7 @@ export interface EventTemplate {
   title: string;
   description: string;
   weight: number;
-  conditions?: { minSeason?: number; positions?: Position[]; minOverall?: number; maxOverall?: number };
+  conditions?: EventConditions;
   choices: EventChoice[];
 }
 
@@ -199,4 +235,9 @@ export interface CareerState {
   awards: string[];
   trophies: string[];
   currentSeasonEventsRemaining: number;
+  /**
+   * Claves de los últimos eventos vividos, para no repetirlos temporada tras
+   * temporada. Se poda a los ~24 más recientes.
+   */
+  recentEventKeys?: string[];
 }

@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatMoney, formatNumber } from "@/lib/utils";
+import { safestChoice } from "@/lib/engine/events";
 import { EventChoiceDialog } from "./event-dialog";
 import { OffersDialog } from "./offers-dialog";
 import { SeasonSummaryDialog } from "./season-summary-dialog";
@@ -72,8 +73,7 @@ export function CareerDashboard({ initialState, onChange }: {
       let s = state;
       let pending = queue.length ? queue : nextSeasonEvents(state, state.currentSeasonEventsRemaining);
       for (const t of pending) {
-        const safest = [...t.choices].sort((a, b) => Math.abs(a.qualityBias) - Math.abs(b.qualityBias))[0];
-        s = resolveEvent(s, t, safest.key).state;
+        s = resolveEvent(s, t, safestChoice(t).key).state;
       }
       const result = endSeason(s);
       update(result.state);
