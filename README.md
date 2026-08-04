@@ -39,6 +39,9 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
 
 ### 2. Habilita Google OAuth en Supabase
 
+> 📘 **¿Te atascas aquí?** Hay una guía detallada, paso a paso y con tabla de
+> errores comunes, en [`docs/google-oauth.md`](docs/google-oauth.md).
+
 1. En Google Cloud Console, crea unas credenciales OAuth
    (`Web application`). Añade como **Authorized redirect URI**:
    `https://<TU-PROJECT-REF>.supabase.co/auth/v1/callback`
