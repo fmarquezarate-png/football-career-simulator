@@ -12,7 +12,7 @@ import { computeAwards } from "./awards";
 import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
 
-const EVENTS_PER_SEASON = 10;
+export const EVENTS_PER_SEASON = 10;
 
 export interface NewCareerParams {
   playerName: string;

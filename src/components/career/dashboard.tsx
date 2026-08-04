@@ -7,7 +7,7 @@ import { POSITION_LABEL } from "@/lib/data/types";
 import { flagUrl, getTeam } from "@/lib/data/loader";
 import { clearLocalCareer, saveLocalCareer } from "@/lib/storage/local";
 import {
-  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam, type ContractOffer,
+  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam, EVENTS_PER_SEASON, type ContractOffer,
 } from "@/lib/engine/careerEngine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,12 @@ export function CareerDashboard({ initialState, onChange }: {
 }) {
   const [state, setState] = useState<CareerState>(initialState);
   const [queue, setQueue] = useState<EventTemplate[]>([]);
+  /**
+   * Posición de la decisión actual dentro de la temporada. Vive aparte del
+   * estado de la carrera para que el diálogo no se remonte —y pierda el
+   * sorteo ya mostrado— cuando el motor descuenta el evento resuelto.
+   */
+  const [eventIndex, setEventIndex] = useState(0);
   const [offers, setOffers] = useState<ContractOffer[] | null>(null);
   const [lastSummary, setLastSummary] = useState<CareerState["history"][number] | null>(null);
 
@@ -44,10 +50,20 @@ export function CareerDashboard({ initialState, onChange }: {
     }
   }, [state, queue.length]);
 
-  function handleChoice(template: EventTemplate, choiceKey: string) {
-    const { state: next } = resolveEvent(state, template, choiceKey);
+  /**
+   * Resuelve la elección en el motor y persiste el nuevo estado, pero **no**
+   * avanza de evento: el diálogo se queda enseñando el sorteo y los efectos
+   * hasta que el jugador pulsa «Continuar».
+   */
+  function handleResolve(template: EventTemplate, choiceKey: string) {
+    const { state: next, outcome } = resolveEvent(state, template, choiceKey);
     update(next);
+    return outcome;
+  }
+
+  function handleContinue() {
     setQueue(q => q.slice(1));
+    setEventIndex(i => i + 1);
   }
 
   function handleEndSeason() {
@@ -62,6 +78,7 @@ export function CareerDashboard({ initialState, onChange }: {
       const result = endSeason(s);
       update(result.state);
       setQueue([]);
+      setEventIndex(0);
       setOffers(result.offers);
       setLastSummary(result.season);
       return;
@@ -69,6 +86,7 @@ export function CareerDashboard({ initialState, onChange }: {
     const result = endSeason(state);
     update(result.state);
     setQueue([]);
+    setEventIndex(0);
     setOffers(result.offers);
     setLastSummary(result.season);
   }
@@ -261,8 +279,13 @@ export function CareerDashboard({ initialState, onChange }: {
 
       {currentEvent && (
         <EventChoiceDialog
+          key={`${state.seasonNumber}-${eventIndex}`}
           event={currentEvent}
-          onChoose={(key) => handleChoice(currentEvent, key)}
+          state={state}
+          onResolve={(key) => handleResolve(currentEvent, key)}
+          onContinue={handleContinue}
+          index={eventIndex}
+          total={EVENTS_PER_SEASON}
         />
       )}
       {offers && (

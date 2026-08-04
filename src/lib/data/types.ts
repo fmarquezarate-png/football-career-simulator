@@ -102,12 +102,30 @@ export interface Contract {
   releaseClause?: number;
 }
 
+/**
+ * Apuesta de una elección: en vez de un único sesgo, la opción se juega a un
+ * sorteo. El motor tira un dado contra `successChance` y aplica `successBias`
+ * o `failureBias` según salga. Las opciones sin `risk` son deterministas en su
+ * intención (aunque el resultado siga muestreándose de una normal).
+ */
+export interface ChoiceRisk {
+  /** Probabilidad base de éxito, 0-1. */
+  successChance: number;
+  successBias: number;
+  failureBias: number;
+  successLabel: string;
+  failureLabel: string;
+  /** Atributo del jugador que inclina la balanza, si aplica. */
+  modifier?: "overall" | "reputation" | "morale" | "fitness";
+}
+
 export interface EventChoice {
   key: string;
   label: string;
   description: string;
   qualityBias: number;
   outcomeSummary: string;
+  risk?: ChoiceRisk;
 }
 
 export interface EventTemplate {
@@ -117,6 +135,16 @@ export interface EventTemplate {
   weight: number;
   conditions?: { minSeason?: number; positions?: Position[]; minOverall?: number; maxOverall?: number };
   choices: EventChoice[];
+}
+
+/** Resultado del sorteo de una elección arriesgada, para poder animarlo. */
+export interface RollResult {
+  /** Probabilidad efectiva de éxito ya ajustada por los atributos, 0-1. */
+  successChance: number;
+  /** Valor sorteado, 0-1. Éxito si es menor que `successChance`. */
+  rolled: number;
+  success: boolean;
+  label: string;
 }
 
 export interface AppliedEventOutcome {
@@ -130,6 +158,7 @@ export interface AppliedEventOutcome {
   overallDelta: number;
   fitnessDelta: number;
   message: string;
+  roll?: RollResult;
 }
 
 export interface GeneratedPlayer {

@@ -1,5 +1,5 @@
 import type {
-  AppliedEventOutcome, CareerState, EventChoice, EventTemplate,
+  AppliedEventOutcome, CareerState, ChoiceRisk, EventChoice, EventTemplate, RollResult,
 } from "../data/types";
 import { normal, clamp, pickWeighted, type Rng } from "./rng";
 
@@ -156,6 +156,87 @@ export const EVENT_TEMPLATES: EventTemplate[] = [
   },
 ];
 
+/**
+ * Apuestas: las opciones listadas aquí dejan de tener un resultado de una sola
+ * dirección y pasan por un sorteo. Se declaran aparte para poder leer de un
+ * vistazo qué decisiones del juego son un órdago y cuáles son terreno seguro.
+ *
+ * Clave: `"<eventKey>.<choiceKey>"`.
+ */
+const RISKS: Record<string, ChoiceRisk> = {
+  "coach_role.accept": {
+    successChance: 0.55, successBias: 0.95, failureBias: -0.45, modifier: "overall",
+    successLabel: "Te adaptas de maravilla.", failureLabel: "El rol no te sale y pierdes minutos.",
+  },
+  "coach_role.refuse": {
+    successChance: 0.28, successBias: 0.5, failureBias: -0.95, modifier: "reputation",
+    successLabel: "El técnico traga y respeta tu criterio.", failureLabel: "Te manda al banquillo sin contemplaciones.",
+  },
+  "renewal_offer.counter": {
+    successChance: 0.5, successBias: 0.85, failureBias: -0.6, modifier: "reputation",
+    successLabel: "El club acepta tus condiciones.", failureLabel: "La negociación se enquista y trasciende.",
+  },
+  "renewal_offer.delay": {
+    successChance: 0.4, successBias: 0.7, failureBias: -0.65,
+    successLabel: "Aparece una oferta mejor y ganas la mano.", failureLabel: "Nadie pregunta por ti y pierdes fuerza.",
+  },
+  "press_criticism.respond": {
+    successChance: 0.42, successBias: 0.75, failureBias: -0.8, modifier: "reputation",
+    successLabel: "Tu respuesta te gana al vestuario y a la afición.", failureLabel: "Se te va de las manos y la lías.",
+  },
+  "press_criticism.extra_training": {
+    successChance: 0.58, successBias: 0.9, failureBias: -0.55, modifier: "fitness",
+    successLabel: "El trabajo extra da resultado.", failureLabel: "Te sobrecargas y lo pagas físicamente.",
+  },
+  "injury_risk.play_pain": {
+    successChance: 0.35, successBias: 0.7, failureBias: -1, modifier: "fitness",
+    successLabel: "Aguantas y eres decisivo.", failureLabel: "La rotura llega. Semanas fuera.",
+  },
+  "captaincy.accept_lead": {
+    successChance: 0.6, successBias: 1, failureBias: -0.4, modifier: "reputation",
+    successLabel: "El brazalete te hace más grande.", failureLabel: "La presión del liderazgo te pesa.",
+  },
+  "transfer_rumor.push_move": {
+    successChance: 0.45, successBias: 0.9, failureBias: -0.85, modifier: "reputation",
+    successLabel: "La operación sale y todos ganan.", failureLabel: "El traspaso se cae y quedas señalado.",
+  },
+  "transfer_rumor.leak_info": {
+    successChance: 0.3, successBias: 0.6, failureBias: -0.95,
+    successLabel: "La filtración acelera tu salida.", failureLabel: "Te pillan. El club te aparta.",
+  },
+  "champions_night.shoot_more": {
+    successChance: 0.5, successBias: 1, failureBias: -0.5, modifier: "overall",
+    successLabel: "Noche redonda: te comes el partido.", failureLabel: "Fallas lo imposible y te crucifican.",
+  },
+  "champions_night.showboat": {
+    successChance: 0.38, successBias: 0.95, failureBias: -0.75, modifier: "overall",
+    successLabel: "El caño da la vuelta al mundo.", failureLabel: "Te sale mal y el rival castiga.",
+  },
+  "national_call.go_all_in": {
+    successChance: 0.55, successBias: 1, failureBias: -0.45, modifier: "overall",
+    successLabel: "Debut soñado con la absoluta.", failureLabel: "Debut gris. Tocará esperar otra lista.",
+  },
+  "locker_conflict.confront": {
+    successChance: 0.45, successBias: 0.8, failureBias: -0.8, modifier: "morale",
+    successLabel: "Os aclaráis y salís reforzados.", failureLabel: "La bronca parte el vestuario en dos.",
+  },
+  "locker_conflict.leak": {
+    successChance: 0.22, successBias: 0.5, failureBias: -1,
+    successLabel: "Nadie rastrea la filtración y ganas el relato.", failureLabel: "Se sabe que fuiste tú. Vestuario perdido.",
+  },
+  "birthday_party.go_all_night": {
+    successChance: 0.35, successBias: 0.55, failureBias: -0.9, modifier: "fitness",
+    successLabel: "El grupo se une y llegas entero al finde.", failureLabel: "Fotos a las 5 de la mañana y multa del club.",
+  },
+};
+
+for (const template of EVENT_TEMPLATES) {
+  for (const choice of template.choices) {
+    const risk = RISKS[`${template.key}.${choice.key}`];
+    if (risk) choice.risk = risk;
+  }
+}
+
 export function pickSeasonEvents(rng: Rng, state: CareerState, count: number): EventTemplate[] {
   const eligible = EVENT_TEMPLATES.filter(t => {
     const c = t.conditions;
@@ -182,10 +263,44 @@ export function pickSeasonEvents(rng: Rng, state: CareerState, count: number): E
  * depende del `qualityBias` de la elección (positivo = mejor mu).
  * `sigma` fijo por eje para mantener aleatoriedad realista.
  */
+/**
+ * Probabilidad de éxito efectiva: la base de la opción, corregida por el
+ * atributo relevante del jugador. Un delantero con media 88 convierte una
+ * apuesta del 45% en algo cercano al 60%; uno de 55, en un 33%.
+ */
+export function effectiveSuccessChance(choice: EventChoice, state: CareerState): number {
+  const risk = choice.risk;
+  if (!risk) return 1;
+  if (!risk.modifier) return clamp(risk.successChance, 0.05, 0.95);
+
+  const value = state[risk.modifier];
+  // Pivote 70 para overall (media decente) y 60 para el resto: moral y forma
+  // arrancan altas, así que un pivote de 50 regalaba casi todas las apuestas.
+  const pivot = risk.modifier === "overall" ? 70 : 60;
+  const adjust = ((value - pivot) / 100) * 0.4;
+  // Nunca por debajo del 10% ni por encima del 85%: una apuesta que no puede
+  // fallar deja de ser una apuesta.
+  return clamp(risk.successChance + adjust, 0.1, 0.85);
+}
+
 export function applyChoice(
   rng: Rng, template: EventTemplate, choice: EventChoice, state: CareerState,
 ): AppliedEventOutcome {
-  const q = choice.qualityBias;
+  let q = choice.qualityBias;
+  let roll: RollResult | undefined;
+
+  if (choice.risk) {
+    const successChance = effectiveSuccessChance(choice, state);
+    const rolled = rng();
+    const success = rolled < successChance;
+    q = success ? choice.risk.successBias : choice.risk.failureBias;
+    roll = {
+      successChance,
+      rolled,
+      success,
+      label: success ? choice.risk.successLabel : choice.risk.failureLabel,
+    };
+  }
 
   // Deltas de rendimiento acumulables durante la temporada.
   const goalsBoost = Math.round(clamp(normal(rng, q * 2.2, 1.5), -5, 8));
@@ -203,7 +318,9 @@ export function applyChoice(
 
   return {
     eventKey: template.key, choiceKey: choice.key, choiceLabel: choice.label,
-    goalsBoost, assistsBoost, moraleDelta, reputationDelta, overallDelta, fitnessDelta, message,
+    goalsBoost, assistsBoost, moraleDelta, reputationDelta, overallDelta, fitnessDelta,
+    message,
+    roll,
   };
 }
 
@@ -211,12 +328,10 @@ function buildMessage(
   t: EventTemplate, c: EventChoice,
   d: { goalsBoost: number; assistsBoost: number; moraleDelta: number; reputationDelta: number; overallDelta: number; fitnessDelta: number },
 ): string {
-  const parts: string[] = [];
-  if (d.overallDelta !== 0) parts.push(`overall ${d.overallDelta >= 0 ? "+" : ""}${d.overallDelta}`);
-  if (d.moraleDelta !== 0) parts.push(`moral ${d.moraleDelta >= 0 ? "+" : ""}${d.moraleDelta}`);
-  if (d.reputationDelta !== 0) parts.push(`reputación ${d.reputationDelta >= 0 ? "+" : ""}${d.reputationDelta}`);
-  if (d.fitnessDelta !== 0) parts.push(`fitness ${d.fitnessDelta >= 0 ? "+" : ""}${d.fitnessDelta}`);
-  if (d.goalsBoost !== 0) parts.push(`goles temporada ${d.goalsBoost >= 0 ? "+" : ""}${d.goalsBoost}`);
-  if (d.assistsBoost !== 0) parts.push(`asist. temporada ${d.assistsBoost >= 0 ? "+" : ""}${d.assistsBoost}`);
-  return `${t.title} · ${c.label}${parts.length ? " → " + parts.join(", ") : ""}`;
+  // Los números los enseña el panel de efectos con barras; aquí solo el titular
+  // y el tono general, para no repetir la misma información dos veces.
+  const net = d.overallDelta + d.reputationDelta * 0.4 + d.moraleDelta * 0.2
+    + d.goalsBoost + d.assistsBoost + d.fitnessDelta * 0.15;
+  const tone = net > 1.5 ? "Sale bien." : net < -1.5 ? "Sale caro." : "Sin grandes cambios.";
+  return `${t.title} · ${c.label}. ${tone}`;
 }

@@ -18,9 +18,15 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
   distribución de probabilidad sobre cuatro franjas de club
   (élite / grande / mitad de tabla / modesto)
 - Selecciones nacionales + Mundiales cada 4 temporadas
-- ~10 eventos narrativos por temporada con 3–5 opciones cada uno.
-  Cada opción tiene un `qualityBias` que sirve como mu de una distribución
-  normal para determinar goles/asistencias/moral/reputación/overall/fitness.
+- Escudos reales de los 96 clubes, servidos en local desde `public/crests/`
+- 10 decisiones narrativas por temporada con 3–5 opciones cada una, resueltas
+  de una en una: eliges → ves el resultado → continúas.
+  - Las opciones normales muestrean sus efectos de una normal cuyo mu es el
+    `qualityBias` de la opción.
+  - Las opciones marcadas como **apuesta** pasan antes por un sorteo con
+    probabilidad de éxito explícita, ajustada por tu media, reputación, moral
+    o forma. El resultado se anima en pantalla (ÉXITO / FALLO) y después se
+    muestran los efectos con barras comparativas.
 - Trofeos de club (liga, copa, supercopa, Champions) y premios individuales
   (Bota de Oro, MVP, Balón de Oro)
 - Sistema de contratos y ofertas al final de cada temporada
@@ -117,6 +123,24 @@ public/data/                  # JSON de ligas y selecciones
 supabase/migrations/          # Esquema SQL
 legacy/                       # Versión vanilla-JS anterior (referencia)
 ```
+
+## 🛡️ Escudos de los clubes
+
+Los escudos viven en `public/crests/<teamId>.png` y se sirven desde el propio
+dominio. **No se enlazan desde Wikipedia**: `upload.wikimedia.org` responde 403
+al hotlinking desde otro dominio, así que enlazados no cargaban nunca.
+
+Para regenerarlos:
+
+```bash
+git clone --depth 1 https://github.com/luukhopman/football-logos /tmp/fl
+node scripts/sync-crests.mjs /tmp/fl
+```
+
+El script empareja cada club con su escudo por similitud de nombre (ignorando
+acentos y sufijos societarios), tira del histórico de temporadas para los
+clubes que hoy están en segunda, verifica que no haya ids de equipo duplicados
+y falla si algún club se queda sin escudo.
 
 ## 🧪 Comandos
 
