@@ -1,0 +1,7 @@
+[
+  { "id": "es1", "name": "LaLiga", "country": "España", "countryCode": "es", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 95, "prestige": 95, "domesticCup": { "id": "copa_rey", "name": "Copa del Rey" }, "continentalCup": "uefa_ucl" },
+  { "id": "en1", "name": "Premier League", "country": "Inglaterra", "countryCode": "gb-eng", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 98, "prestige": 96, "domesticCup": { "id": "fa_cup", "name": "FA Cup" }, "continentalCup": "uefa_ucl" },
+  { "id": "de1", "name": "Bundesliga", "country": "Alemania", "countryCode": "de", "confederation": "UEFA", "tier": 1, "teams": 18, "rounds": 34, "reputation": 92, "prestige": 90, "domesticCup": { "id": "dfb_pokal", "name": "DFB-Pokal" }, "continentalCup": "uefa_ucl" },
+  { "id": "it1", "name": "Serie A", "country": "Italia", "countryCode": "it", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 91, "prestige": 92, "domesticCup": { "id": "coppa_italia", "name": "Coppa Italia" }, "continentalCup": "uefa_ucl" },
+  { "id": "fr1", "name": "Ligue 1", "country": "Francia", "countryCode": "fr", "confederation": "UEFA", "tier": 1, "teams": 18, "rounds": 34, "reputation": 88, "prestige": 85, "domesticCup": { "id": "coupe_france", "name": "Coupe de France" }, "continentalCup": "uefa_ucl" }
+]
