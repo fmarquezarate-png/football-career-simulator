@@ -4,6 +4,7 @@ import { AppNav } from "@/components/nav/app-nav";
 import { DIFFICULTY_ORDER, DIFFICULTY_PROFILES } from "@/lib/data/difficulty";
 import { COUNTRIES } from "@/lib/data/countries";
 import { Dices, Globe2, Share2, Trophy, Zap } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 
 export default function LandingPage() {
   return (
@@ -13,7 +14,7 @@ export default function LandingPage() {
       <main>
         {/* Hero */}
         <section className="container flex flex-col items-center py-16 text-center md:py-24">
-          <span className="animate-ball mb-4 text-6xl">⚽</span>
+          <Logo className="mb-6" />
 
           <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
             <Zap className="h-3.5 w-3.5" /> Temporada 2026
@@ -42,7 +43,7 @@ export default function LandingPage() {
           <dl className="mt-14 grid w-full max-w-3xl grid-cols-2 gap-4 md:grid-cols-4">
             <Stat value={`${COUNTRIES.length}`} label="países jugables" />
             <Stat value="5" label="grandes ligas" />
-            <Stat value="10" label="decisiones/temporada" />
+            <Stat value="5" label="decisiones/temporada" />
             <Stat value="20" label="temporadas de carrera" />
           </dl>
         </section>
@@ -127,7 +128,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="container border-t border-white/5 py-8 text-center text-xs text-muted-foreground">
-        FCS v2.1 ·{" "}
+        Football Career Simulator ·{" "}
         <a
           className="underline hover:text-primary"
           href="https://github.com/fmarquezarate-png/football-career-simulator"

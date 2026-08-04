@@ -1,23 +1,32 @@
 import type {
   AppliedEventOutcome, CareerSeasonStats, CareerState, Difficulty, EventTemplate,
-  Position,
+  Position, PreferredFoot,
 } from "../data/types";
 import { getLeague, getAllLeagues } from "../data/loader";
 import { DIFFICULTY_PROFILES } from "../data/difficulty";
 import { assignStartingClub, type ClubTier } from "./clubAssignment";
 import { makeRng, clamp, type Rng } from "./rng";
+import {
+  applyOverallDeltaToAttributes, capToPotential, evolveAttributes,
+  initialAttributes, overallFromAttributes,
+} from "./attributes";
 import { simulatePlayerSeason } from "./playerPerformance";
 import { applyChoice, EVENT_MEMORY, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
 import { computeAwards } from "./awards";
 import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
 
-export const EVENTS_PER_SEASON = 10;
+/**
+ * Decisiones por temporada. Cinco mantiene el ritmo: suficientes para que la
+ * temporada tenga forma, pocas como para que cada una pese.
+ */
+export const EVENTS_PER_SEASON = 5;
 
 export interface NewCareerParams {
   playerName: string;
   nationality: string;
   position: Position;
+  preferredFoot: PreferredFoot;
   difficulty: Difficulty;
   seed?: string;
 }
@@ -30,11 +39,16 @@ export function newCareer(params: NewCareerParams): CareerState {
   const rng = makeRng(params.seed ?? `${params.playerName}-${Date.now()}`);
   const profile = DIFFICULTY_PROFILES[params.difficulty];
   const { team, league, tier } = assignStartingClub(rng, params.difficulty);
-  const startOverall = clamp(profile.startOverall + Math.floor(rng() * 6), 45, 85);
+  const targetOverall = clamp(profile.startOverall + Math.floor(rng() * 6), 45, 85);
+  // El OVR sale de los atributos, no al revés: así cualquier cambio posterior
+  // en un atributo se refleja en la media.
+  const attributes = initialAttributes(params.position, targetOverall, rng, params.preferredFoot);
+  const startOverall = overallFromAttributes(attributes, params.position);
   return {
     playerName: params.playerName,
     nationality: params.nationality,
     position: params.position,
+    preferredFoot: params.preferredFoot,
     difficulty: params.difficulty,
     currentTeamId: team.id,
     currentTeamName: team.name,
@@ -49,7 +63,7 @@ export function newCareer(params: NewCareerParams): CareerState {
     seasonNumber: 1,
     week: 1,
     isRetired: false,
-    attributes: defaultAttributes(params.position),
+    attributes,
     totals: { goals: 0, assists: 0, apps: 0, motm: 0 },
     seasonStats: { goals: 0, assists: 0, apps: 0, motm: 0 },
     history: [],
@@ -63,17 +77,6 @@ export function newCareer(params: NewCareerParams): CareerState {
     trophies: [],
     currentSeasonEventsRemaining: EVENTS_PER_SEASON,
   };
-}
-
-function defaultAttributes(pos: Position) {
-  const base = { pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60 };
-  if (pos === "GK") return { ...base, defending: 70, pace: 45 };
-  if (["CB", "LB", "RB"].includes(pos)) return { ...base, defending: 72, physical: 68 };
-  if (["CDM", "CM"].includes(pos)) return { ...base, passing: 70, defending: 65 };
-  if (pos === "CAM") return { ...base, passing: 72, dribbling: 70, shooting: 68 };
-  if (["LW", "RW"].includes(pos)) return { ...base, pace: 75, dribbling: 72, shooting: 68 };
-  if (pos === "ST") return { ...base, shooting: 74, pace: 70, physical: 68 };
-  return base;
 }
 
 /** Devuelve los eventos del bloque actual (o siguientes 3 hasta que el usuario los cierre). */
@@ -93,9 +96,18 @@ export function resolveEvent(
   // La dificultad amplifica el lado malo de cada decisión, no el bueno.
   const outcome = amplifyDownside(raw, DIFFICULTY_PROFILES[state.difficulty].eventVariance);
 
+  // El cambio de media no se aplica al OVR directamente: se reparte entre los
+  // atributos y el OVR se recalcula desde ellos.
+  const attributes = capToPotential(
+    applyOverallDeltaToAttributes(state.attributes, state.position, outcome.overallDelta, rng),
+    state.position,
+    Math.min(99, state.potential + 3),
+  );
+
   const newState: CareerState = {
     ...state,
-    overall: clamp(state.overall + outcome.overallDelta, 45, Math.min(99, state.potential + 3)),
+    attributes,
+    overall: clamp(overallFromAttributes(attributes, state.position), 45, Math.min(99, state.potential + 3)),
     morale: clamp(state.morale + outcome.moraleDelta, 0, 100),
     reputation: clamp(state.reputation + outcome.reputationDelta, 0, 100),
     fitness: clamp(state.fitness + outcome.fitnessDelta, 20, 100),
@@ -175,19 +187,24 @@ export function endSeason(state: CareerState): EndSeasonResult {
   const nt = simulateNationalTeam(rng, state);
   Object.assign(seasonStats, nt);
 
-  // Progresión
+  // Progresión: los atributos se mueven según lo que ha pasado en el campo.
   const newAge = state.age + 1;
-  const growthMult = DIFFICULTY_PROFILES[state.difficulty].growthMultiplier;
-  const rawGrowth = newAge <= 24 ? 2 + Math.floor(rng() * 3) : newAge <= 28 ? Math.floor(rng() * 2) : newAge <= 31 ? 0 : -1 - Math.floor(rng() * 2);
-  // El multiplicador solo acelera/frena la mejora; el declive por edad es igual para todos.
-  const growth = rawGrowth > 0 ? rawGrowth * growthMult : rawGrowth;
-  const newOverall = clamp(state.overall + growth + Math.max(0, seasonStats.avgRating - 7) * 0.5, 45, state.potential);
+  const evolved = evolveAttributes(
+    state.attributes, state.position, seasonStats, newAge, state.potential, rng,
+  );
+  seasonStats.age = state.age;
+  seasonStats.overallAfter = overallFromAttributes(evolved.attributes, state.position);
+  seasonStats.attributeChanges = evolved.changes;
+  // La media sale íntegramente de los atributos: no hay un segundo cálculo de
+  // progresión por edad que pudiera contradecirlos.
+  const newOverall = seasonStats.overallAfter!;
 
   const newState: CareerState = {
     ...state,
     seasonNumber: state.seasonNumber + 1,
     week: 1,
     age: newAge,
+    attributes: evolved.attributes,
     overall: Math.round(newOverall),
     reputation: clamp(state.reputation + seasonStats.trophies.length * 3 + seasonStats.individualAwards.length * 6 + Math.max(0, seasonStats.avgRating - 7) * 4, 0, 100),
     morale: clamp(60 + seasonStats.avgRating * 4, 0, 100),

@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CountryPicker, type CountryOption } from "./country-picker";
-import { POSITION_LABEL, POSITIONS, type Difficulty, type Position } from "@/lib/data/types";
+import {
+  FOOT_LABEL, POSITION_LABEL, POSITIONS,
+  type Difficulty, type Position, type PreferredFoot,
+} from "@/lib/data/types";
 import { DIFFICULTY_ORDER, DIFFICULTY_PROFILES } from "@/lib/data/difficulty";
 import { TIER_LABEL, tierOdds } from "@/lib/engine/clubAssignment";
 import { newCareer } from "@/lib/engine/careerEngine";
@@ -28,6 +31,7 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
   const [name, setName] = useState("");
   const [nationality, setNationality] = useState("es");
   const [position, setPosition] = useState<Position>("ST");
+  const [preferredFoot, setPreferredFoot] = useState<PreferredFoot>("right");
   const [difficulty, setDifficulty] = useState<Difficulty>("normal");
   const [submitting, setSubmitting] = useState(false);
 
@@ -49,6 +53,7 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
       playerName: name.trim(),
       nationality,
       position,
+      preferredFoot,
       difficulty,
     });
     saveLocalCareer(state);
@@ -80,7 +85,7 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <Label>Nacionalidad</Label>
               <div className="mt-1.5">
@@ -88,6 +93,30 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
               </div>
               <p className="mt-1.5 text-xs text-muted-foreground">
                 Define tu selección y el estilo de tu nombre. {countries.length} países disponibles.
+              </p>
+            </div>
+
+            <div>
+              <Label>Pierna hábil</Label>
+              <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                {(["left", "right", "both"] as PreferredFoot[]).map(f => (
+                  <button
+                    type="button"
+                    key={f}
+                    onClick={() => setPreferredFoot(f)}
+                    className={cn(
+                      "rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
+                      preferredFoot === f
+                        ? "border-primary bg-primary/15 text-primary"
+                        : "border-border text-muted-foreground hover:bg-white/5",
+                    )}
+                  >
+                    {FOOT_LABEL[f]}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-1.5 text-xs text-muted-foreground">
+                Ser ambidiestro mejora el pase a costa de algo de regate.
               </p>
             </div>
 

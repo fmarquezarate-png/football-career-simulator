@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/brand/logo";
 import { signInWithGoogle, signOut, useSession } from "@/lib/supabase/use-session";
 
 interface NavItem {
@@ -74,11 +75,8 @@ export function AppNav() {
     <>
       <header className="sticky top-0 z-40 border-b border-white/5 bg-background/70 backdrop-blur-lg">
         <div className="container flex h-16 items-center justify-between gap-3">
-          <Link href="/" className="flex items-center gap-2 font-black tracking-tight">
-            <span className="text-2xl">⚽</span>
-            <span className="text-lg">
-              FCS<span className="text-primary">.</span>
-            </span>
+          <Link href="/" aria-label="Football Career Simulator">
+            <Logo compact />
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">
@@ -138,9 +136,7 @@ export function AppNav() {
           )}
         >
           <div className="mb-4 flex items-center justify-between">
-            <span className="flex items-center gap-2 font-black">
-              <span className="text-2xl">⚽</span> Menú
-            </span>
+            <Logo compact />
             <Button variant="ghost" size="icon" aria-label="Cerrar menú" onClick={() => setOpen(false)}>
               <X className="h-5 w-5" />
             </Button>

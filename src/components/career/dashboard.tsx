@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatMoney, formatNumber } from "@/lib/utils";
+import { ATTRIBUTE_KEYS, ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine/attributes";
 import { safestChoice } from "@/lib/engine/events";
 import { EventChoiceDialog } from "./event-dialog";
 import { OffersDialog } from "./offers-dialog";
@@ -46,10 +47,14 @@ export function CareerDashboard({ initialState, onChange }: {
   }, [onChange]);
 
   useEffect(() => {
+    // No cargar las decisiones de la temporada siguiente mientras siga abierto
+    // el cierre de la anterior: si no, el diálogo de eventos se monta encima y
+    // las ofertas de fichaje asoman de fondo antes de que toque decidirlas.
+    if (offers || lastSummary) return;
     if (queue.length === 0 && state.currentSeasonEventsRemaining > 0) {
       setQueue(nextSeasonEvents(state));
     }
-  }, [state, queue.length]);
+  }, [state, queue.length, offers, lastSummary]);
 
   /**
    * Resuelve la elección en el motor y persiste el nuevo estado, pero **no**
@@ -103,7 +108,8 @@ export function CareerDashboard({ initialState, onChange }: {
     window.location.href = "/";
   }
 
-  const currentEvent = queue[0];
+  // Las decisiones se pausan mientras el cierre de temporada esté en pantalla.
+  const currentEvent = offers || lastSummary ? undefined : queue[0];
 
   return (
     <div className="container py-6 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -237,13 +243,54 @@ export function CareerDashboard({ initialState, onChange }: {
           </TabsContent>
 
           <TabsContent value="attrs">
-            <Card><CardContent className="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(state.attributes).map(([k, v]) => (
-                <div key={k}>
-                  <div className="flex justify-between text-sm mb-1"><span className="capitalize">{k}</span><span className="font-bold">{v}</span></div>
-                  <Progress value={v} />
+            <Card><CardContent className="pt-6 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Tu media <span className="font-bold text-primary">{state.overall}</span> sale
+                de estos atributos según tu posición ({POSITION_LABEL[state.position]}).
+                Se mueven con cada decisión y con lo que hagas en el campo.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {ATTRIBUTE_KEYS.map(k => {
+                  const v = state.attributes[k];
+                  const last = state.history.at(-1)?.attributeChanges?.find(c => c.key === k);
+                  return (
+                    <div key={k}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{ATTRIBUTE_LABEL[k]}</span>
+                        <span className="flex items-center gap-1.5">
+                          {last && (
+                            <span className={last.delta > 0 ? "text-primary text-xs" : "text-destructive text-xs"}>
+                              {last.delta > 0 ? "+" : ""}{last.delta}
+                            </span>
+                          )}
+                          <span className="font-bold">{v}</span>
+                        </span>
+                      </div>
+                      <Progress value={v} />
+                    </div>
+                  );
+                })}
+              </div>
+              {(state.history.at(-1)?.attributeChanges?.length ?? 0) > 0 && (
+                <div className="border-t border-border pt-3">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Qué te movió la última temporada
+                  </p>
+                  <ul className="space-y-1">
+                    {state.history.at(-1)!.attributeChanges!.map((c, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className={c.delta > 0 ? "font-bold text-primary" : "font-bold text-destructive"}>
+                          {c.delta > 0 ? "+" : ""}{c.delta}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {ATTRIBUTE_LABEL[c.key as AttributeKey] ?? c.key}
+                        </span>
+                        <span>· {c.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
             </CardContent></Card>
           </TabsContent>
 
@@ -288,11 +335,12 @@ export function CareerDashboard({ initialState, onChange }: {
           total={EVENTS_PER_SEASON}
         />
       )}
-      {offers && (
-        <OffersDialog offers={offers} currentTeamId={state.currentTeamId} onChoose={chooseOffer} />
-      )}
-      {lastSummary && !offers && (
+      {/* Cierre de temporada: primero el resumen, y solo al cerrarlo, las ofertas. */}
+      {lastSummary && (
         <SeasonSummaryDialog summary={lastSummary} onClose={() => setLastSummary(null)} />
+      )}
+      {offers && !lastSummary && (
+        <OffersDialog offers={offers} currentTeamId={state.currentTeamId} onChoose={chooseOffer} />
       )}
     </div>
   );

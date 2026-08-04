@@ -1,4 +1,4 @@
-# ⚽ Football Career Simulator v2
+# ⚽ Football Career Simulator
 
 Simulador de carrera de fútbol construido con Next.js 15 + Supabase.
 Elige tu club, toma decisiones estocásticas cada temporada, gana Balones
@@ -25,7 +25,7 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
   reputación, moral, forma y franja del club, así que un canterano de 18 años
   y un veterano de 33 ven repertorios casi disjuntos. El motor además recuerda
   los 24 últimos eventos vividos para no repetirlos.
-- 10 decisiones por temporada, resueltas de una en una:
+- **5 decisiones por temporada**, resueltas de una en una:
   eliges → ves el resultado → continúas.
   - **Ninguna opción es gratis.** Cada elección declara sus efectos por
     métrica y el 70% mezcla signo positivo y negativo: ganar reputación cuesta
@@ -36,6 +36,11 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
     (ÉXITO / FALLO) y después se muestran los efectos con barras comparativas.
 - Trofeos de club (liga, copa, supercopa, Champions) y premios individuales
   (Bota de Oro, MVP, Balón de Oro)
+- **Atributos vivos**: velocidad, tiro, pase, regate, defensa y físico ya no
+  son decorativos. La media sale de ellos según tu puesto, y se mueven con cada
+  decisión, con lo que hagas en el campo y con la edad (primero se van las
+  piernas, después el cuerpo). El potencial es un techo real.
+- Pierna hábil elegible al crear el jugador
 - Sistema de contratos y ofertas al final de cada temporada
 - Guardado local (modo invitado) o en Supabase (login con Google)
 - Compartir carrera pública por URL y **comparar dos carreras** lado a lado

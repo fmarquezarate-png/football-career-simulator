@@ -110,3 +110,11 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-ball { animation: none; }
 }
+
+/* Degradado dorado de la marca */
+.text-gradient-gold {
+  background: linear-gradient(105deg, #f6e7b4 0%, #d9a441 38%, #b07c22 62%, #f0d089 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

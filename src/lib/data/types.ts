@@ -17,6 +17,14 @@ export const POSITION_LABEL: Record<Position, string> = {
 
 export type Difficulty = "easy" | "normal" | "hard" | "legendary";
 
+export type PreferredFoot = "left" | "right" | "both";
+
+export const FOOT_LABEL: Record<PreferredFoot, string> = {
+  left: "Zurdo",
+  right: "Diestro",
+  both: "Ambidiestro",
+};
+
 export interface Attributes {
   pace: number;
   shooting: number;
@@ -90,6 +98,11 @@ export interface CareerSeasonStats {
   nationalTeamApps?: number;
   nationalTeamGoals?: number;
   worldCupParticipated?: string;
+  /** Edad y media al cerrar la temporada, para la línea temporal de carrera. */
+  age?: number;
+  overallAfter?: number;
+  /** Qué atributos se movieron y por qué. */
+  attributeChanges?: { key: string; delta: number; reason: string }[];
 }
 
 export interface Contract {
@@ -211,6 +224,7 @@ export interface CareerState {
   playerName: string;
   nationality: string;
   position: Position;
+  preferredFoot: PreferredFoot;
   difficulty: Difficulty;
   currentTeamId: string;
   currentTeamName: string;
