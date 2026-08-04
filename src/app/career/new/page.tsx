@@ -1,22 +1,22 @@
 import { NewCareerForm } from "@/components/career/new-career-form";
-import { getAllLeagues, LEAGUES_INDEX } from "@/lib/data/loader";
-import { NATIONALITIES } from "@/lib/data/nationalities";
+import { AppNav } from "@/components/nav/app-nav";
+import { NATIONALITY_OPTIONS } from "@/lib/data/nationalities";
+
+export const metadata = { title: "Nueva carrera · FCS" };
 
 export default function NewCareerPage() {
-  const leagues = getAllLeagues().map(l => ({
-    id: l.id,
-    name: l.name,
-    country: l.country,
-    countryCode: l.countryCode,
-    teams: l.teams.map(t => ({ id: t.id, name: t.name, crest: t.crest, overall: t.overall })),
-  }));
   return (
-    <main className="pitch-bg min-h-dvh">
-      <div className="container max-w-2xl py-8">
-        <h1 className="text-3xl font-black mb-2">Empieza tu carrera</h1>
-        <p className="text-muted-foreground mb-8">Crea tu jugador y elige el club donde debutar.</p>
-        <NewCareerForm leagues={leagues} nationalities={NATIONALITIES.map(n => ({ id: n.id, name: n.name, code: n.code }))} leagueIndex={LEAGUES_INDEX} />
-      </div>
-    </main>
+    <div className="pitch-bg min-h-dvh">
+      <AppNav />
+      <main className="container max-w-3xl py-10">
+        <h1 className="text-4xl font-black tracking-tight md:text-5xl">
+          Crea tu <span className="text-gradient-pitch">futbolista</span>
+        </h1>
+        <p className="mb-8 mt-3 text-muted-foreground">
+          Tres pasos y a jugar. El club de debut lo decide el sorteo, no tú.
+        </p>
+        <NewCareerForm countries={NATIONALITY_OPTIONS} />
+      </main>
+    </div>
   );
 }

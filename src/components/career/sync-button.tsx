@@ -1,24 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
-import type { User } from "@supabase/supabase-js";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useSession } from "@/lib/supabase/use-session";
 import { saveCloudCareer, togglePublic } from "@/lib/storage/cloud";
 import type { CareerState } from "@/lib/data/types";
 import { Cloud, Share2, Check } from "lucide-react";
 import { saveLocalCareer } from "@/lib/storage/local";
 
 export function SyncButton({ state, onSaved }: { state: CareerState; onSaved: (s: CareerState) => void }) {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useSession();
   const [saving, setSaving] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setUser(s?.user ?? null));
-    return () => sub.subscription.unsubscribe();
-  }, []);
 
   if (!user) return null;
 

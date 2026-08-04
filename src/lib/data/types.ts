@@ -150,6 +150,8 @@ export interface CareerState {
   currentTeamId: string;
   currentTeamName: string;
   currentLeagueId: string;
+  /** Franja del club sorteado al debutar (solo informativo). */
+  startingTier?: "elite" | "grande" | "media" | "modesto";
   age: number;
   overall: number;
   potential: number;

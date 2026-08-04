@@ -12,6 +12,11 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
 ## 🎮 Qué incluye
 
 - 5 ligas top con equipos, escudos y ratings (LaLiga, Premier, Bundesliga, Serie A, Ligue 1)
+- **205 países jugables** (miembros FIFA + selecciones británicas), con
+  generador de nombres por región lingüística
+- **El club de debut se sortea**: no lo eliges. Cada dificultad define una
+  distribución de probabilidad sobre cuatro franjas de club
+  (élite / grande / mitad de tabla / modesto)
 - Selecciones nacionales + Mundiales cada 4 temporadas
 - ~10 eventos narrativos por temporada con 3–5 opciones cada uno.
   Cada opción tiene un `qualityBias` que sirve como mu de una distribución
@@ -61,7 +66,16 @@ npm run dev
 2. En Vercel → "Add new project" → importa el repo.
 3. En `Settings → Environment Variables` añade las tres claves de
    `.env.example`. Marca `NEXT_PUBLIC_SITE_URL` con tu URL final de Vercel.
+   **Márcalas para los tres entornos** (Production, Preview y Development):
+   los deploys de rama (`...-git-main-....vercel.app`) usan el entorno
+   Preview, y si ahí faltan las claves esas URLs se quedan en modo invitado.
 4. Deploy. El framework se detecta automáticamente.
+
+> ⚠️ **Las variables `NEXT_PUBLIC_*` se incrustan en el bundle durante el
+> build, no se leen en runtime.** Si las añades después de un deploy, hay que
+> volver a desplegar (`Deployments → ⋯ → Redeploy`, **sin** "Use existing
+> Build Cache") para que lleguen al navegador. La app ya no se rompe si
+> faltan: degrada a modo invitado y lo indica en el menú.
 
 ### 5. Verifica
 

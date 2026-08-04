@@ -3,6 +3,8 @@ import type {
   Position,
 } from "../data/types";
 import { getLeague, getAllLeagues } from "../data/loader";
+import { DIFFICULTY_PROFILES } from "../data/difficulty";
+import { assignStartingClub, type ClubTier } from "./clubAssignment";
 import { makeRng, clamp, type Rng } from "./rng";
 import { simulatePlayerSeason } from "./playerPerformance";
 import { applyChoice, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
@@ -10,7 +12,6 @@ import { computeAwards } from "./awards";
 import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
 
-const START_OVERALL: Record<Difficulty, number> = { easy: 72, normal: 65, hard: 58, legendary: 52 };
 const EVENTS_PER_SEASON = 10;
 
 export interface NewCareerParams {
@@ -18,16 +19,18 @@ export interface NewCareerParams {
   nationality: string;
   position: Position;
   difficulty: Difficulty;
-  teamId: string;
   seed?: string;
 }
 
+/**
+ * Crea la carrera. El club de debut **no se elige**: se sortea a partir de la
+ * distribución de franjas de la dificultad (ver `clubAssignment.ts`).
+ */
 export function newCareer(params: NewCareerParams): CareerState {
   const rng = makeRng(params.seed ?? `${params.playerName}-${Date.now()}`);
-  const league = findLeagueForTeam(params.teamId);
-  if (!league) throw new Error(`Equipo desconocido: ${params.teamId}`);
-  const team = league.teams.find(t => t.id === params.teamId)!;
-  const startOverall = clamp(START_OVERALL[params.difficulty] + Math.floor(rng() * 6), 45, 85);
+  const profile = DIFFICULTY_PROFILES[params.difficulty];
+  const { team, league, tier } = assignStartingClub(rng, params.difficulty);
+  const startOverall = clamp(profile.startOverall + Math.floor(rng() * 6), 45, 85);
   return {
     playerName: params.playerName,
     nationality: params.nationality,
@@ -36,9 +39,10 @@ export function newCareer(params: NewCareerParams): CareerState {
     currentTeamId: team.id,
     currentTeamName: team.name,
     currentLeagueId: league.id,
+    startingTier: tier,
     age: 18,
     overall: startOverall,
-    potential: clamp(startOverall + 10 + Math.floor(rng() * 15), 65, 95),
+    potential: clamp(startOverall + 10 + profile.potentialBonus + Math.floor(rng() * 15), 62, 95),
     reputation: 20,
     morale: 80,
     fitness: 100,
@@ -72,13 +76,6 @@ function defaultAttributes(pos: Position) {
   return base;
 }
 
-function findLeagueForTeam(teamId: string) {
-  for (const league of getAllLeagues()) {
-    if (league.teams.some(t => t.id === teamId)) return league;
-  }
-  return null;
-}
-
 /** Devuelve los eventos del bloque actual (o siguientes 3 hasta que el usuario los cierre). */
 export function nextSeasonEvents(state: CareerState, chunk = 3): EventTemplate[] {
   const rng = makeRng(`events-${state.playerName}-${state.seasonNumber}-${state.currentSeasonEventsRemaining}`);
@@ -92,7 +89,9 @@ export function resolveEvent(
   const choice = template.choices.find(c => c.key === choiceKey);
   if (!choice) throw new Error(`Choice desconocida: ${choiceKey}`);
   const rng = makeRng(`choice-${state.playerName}-${state.seasonNumber}-${template.key}-${choiceKey}-${Date.now()}`);
-  const outcome = applyChoice(rng, template, choice, state);
+  const raw = applyChoice(rng, template, choice, state);
+  // La dificultad amplifica el lado malo de cada decisión, no el bueno.
+  const outcome = amplifyDownside(raw, DIFFICULTY_PROFILES[state.difficulty].eventVariance);
 
   const newState: CareerState = {
     ...state,
@@ -109,6 +108,21 @@ export function resolveEvent(
     currentSeasonEventsRemaining: Math.max(0, state.currentSeasonEventsRemaining - 1),
   };
   return { state: newState, outcome };
+}
+
+/** Escala solo los deltas negativos por el factor de varianza de la dificultad. */
+function amplifyDownside(o: AppliedEventOutcome, variance: number): AppliedEventOutcome {
+  if (variance === 1) return o;
+  const down = (v: number) => (v < 0 ? v * variance : v);
+  return {
+    ...o,
+    goalsBoost: Math.round(down(o.goalsBoost)),
+    assistsBoost: Math.round(down(o.assistsBoost)),
+    moraleDelta: down(o.moraleDelta),
+    reputationDelta: down(o.reputationDelta),
+    overallDelta: down(o.overallDelta),
+    fitnessDelta: down(o.fitnessDelta),
+  };
 }
 
 export interface EndSeasonResult {
@@ -160,7 +174,10 @@ export function endSeason(state: CareerState): EndSeasonResult {
 
   // Progresión
   const newAge = state.age + 1;
-  const growth = newAge <= 24 ? 2 + Math.floor(rng() * 3) : newAge <= 28 ? Math.floor(rng() * 2) : newAge <= 31 ? 0 : -1 - Math.floor(rng() * 2);
+  const growthMult = DIFFICULTY_PROFILES[state.difficulty].growthMultiplier;
+  const rawGrowth = newAge <= 24 ? 2 + Math.floor(rng() * 3) : newAge <= 28 ? Math.floor(rng() * 2) : newAge <= 31 ? 0 : -1 - Math.floor(rng() * 2);
+  // El multiplicador solo acelera/frena la mejora; el declive por edad es igual para todos.
+  const growth = rawGrowth > 0 ? rawGrowth * growthMult : rawGrowth;
   const newOverall = clamp(state.overall + growth + Math.max(0, seasonStats.avgRating - 7) * 0.5, 45, state.potential);
 
   const newState: CareerState = {
