@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrera · Football Career Simulator</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/career.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="page-header">
+    <a href="../index.html">← Inicio</a>
+    <h1>⚽ Mi Carrera</h1>
+    <div style="margin-left:auto;display:flex;gap:0.5rem;" id="headerActions"></div>
+  </header>
+
+  <div id="setupScreen" class="page-body" style="display:none;">
+    <h2 style="margin-bottom:1.5rem;">🎮 Nueva Carrera</h2>
+    <div class="card" style="max-width:500px;">
+      <form id="setupForm" style="display:flex;flex-direction:column;gap:1rem;">
+        <div>
+          <label style="font-size:0.85rem;color:var(--text2);display:block;margin-bottom:0.4rem;">Nombre del jugador</label>
+          <input type="text" id="playerName" placeholder="Tu nombre" required
+            style="width:100%;padding:0.6rem 0.8rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.95rem;" />
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:var(--text2);display:block;margin-bottom:0.4rem;">Posición</label>
+          <select id="playerPosition"
+            style="width:100%;padding:0.6rem 0.8rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.95rem;">
+            <option value="ST">Delantero (ST)</option>
+            <option value="CAM">Mediapunta (CAM)</option>
+            <option value="LW">Extremo Izq (LW)</option>
+            <option value="RW">Extremo Der (RW)</option>
+            <option value="CM">Centrocampista (CM)</option>
+            <option value="CB">Defensa Central (CB)</option>
+            <option value="LB">Lateral Izq (LB)</option>
+            <option value="RB">Lateral Der (RB)</option>
+            <option value="GK">Portero (GK)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.85rem;color:var(--text2);display:block;margin-bottom:0.4rem;">Dificultad</label>
+          <select id="difficulty"
+            style="width:100%;padding:0.6rem 0.8rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.95rem;">
+            <option value="easy">Fácil (OVR 72)</option>
+            <option value="normal" selected>Normal (OVR 65)</option>
+            <option value="hard">Difícil (OVR 58)</option>
+            <option value="legendary">Legendario (OVR 52)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="margin-top:0.5rem;">🚀 Comenzar Carrera</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="careerScreen" class="career-layout" style="display:none;">
+    <aside class="sidebar">
+      <div class="player-card">
+        <div class="player-avatar">⚽</div>
+        <div class="player-name" id="sidebarName">-</div>
+        <div class="player-position" id="sidebarPos">-</div>
+        <div class="player-overall" id="sidebarOvr">--</div>
+      </div>
+      <div class="season-info" id="seasonInfo"></div>
+    </aside>
+
+    <main class="career-main">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="overview">Resumen</button>
+        <button class="tab-btn" data-tab="fixtures">Partidos</button>
+        <button class="tab-btn" data-tab="standings">Tabla</button>
+        <button class="tab-btn" data-tab="squad">Plantilla</button>
+        <button class="tab-btn" data-tab="stats">Estadísticas</button>
+      </div>
+      <div id="tabContent"></div>
+    </main>
+  </div>
+
+  <script type="module" src="../js/career.js"></script>
+</body>
+</html>

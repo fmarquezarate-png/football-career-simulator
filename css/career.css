@@ -1,0 +1,123 @@
+/* Career Page Specific Styles */
+
+.career-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  min-height: calc(100vh - 65px);
+}
+
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.player-card {
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg3);
+  border-radius: var(--radius);
+}
+
+.player-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin: 0 auto 0.75rem;
+  border: 3px solid var(--accent);
+}
+
+.player-name { font-weight: 700; font-size: 1.1rem; }
+.player-position { color: var(--text2); font-size: 0.8rem; margin-top: 0.2rem; }
+.player-overall {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--gold);
+}
+
+.season-info {
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+}
+
+.season-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.season-info-row:last-child { border-bottom: none; }
+.season-info-label { color: var(--text2); }
+.season-info-value { font-weight: 600; }
+
+/* Main content */
+.career-main { padding: 1.5rem; overflow-y: auto; }
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg3);
+  border-radius: 8px;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+  width: fit-content;
+}
+
+.tab-btn {
+  padding: 0.5rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tab-btn.active {
+  background: var(--bg2);
+  color: var(--text);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+/* Fixture list */
+.fixtures-section h3 { margin-bottom: 0.75rem; font-size: 0.9rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* Formation */
+.formation-field {
+  background: linear-gradient(180deg, #1a4731 0%, #166534 50%, #1a4731 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  aspect-ratio: 2/3;
+  max-width: 340px;
+  position: relative;
+  border: 2px solid rgba(255,255,255,0.1);
+}
+
+.field-lines {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .career-layout { grid-template-columns: 1fr; }
+  .sidebar { border-right: none; border-bottom: 1px solid var(--border); }
+}

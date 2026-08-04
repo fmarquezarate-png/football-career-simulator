@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ligas · Football Career Simulator</title>
+  <link rel="stylesheet" href="../css/main.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="page-header">
+    <a href="../index.html">← Inicio</a>
+    <h1>🌍 Explorar Ligas</h1>
+  </header>
+
+  <div class="page-body">
+    <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem;align-items:center;">
+      <input id="searchInput" type="text" placeholder="Buscar liga o país..." style="flex:1;min-width:200px;padding:0.6rem 0.9rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;" />
+      <select id="confederationFilter" style="padding:0.6rem 0.8rem;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.9rem;">
+        <option value="">Todas las confederaciones</option>
+        <option value="UEFA">UEFA (Europa)</option>
+        <option value="CONMEBOL">CONMEBOL (Sudamérica)</option>
+        <option value="CONCACAF">CONCACAF (Norteamérica)</option>
+        <option value="CAF">CAF (África)</option>
+        <option value="AFC">AFC (Asia)</option>
+        <option value="OFC">OFC (Oceanía)</option>
+      </select>
+    </div>
+    <div id="leaguesList" class="card"></div>
+  </div>
+
+  <script type="module" src="../js/leagues.js"></script>
+</body>
+</html>

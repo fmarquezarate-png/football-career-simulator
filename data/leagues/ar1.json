@@ -1,0 +1,25 @@
+{
+  "id": "ar1",
+  "name": "Liga Profesional",
+  "country": "Argentina",
+  "flag": "🇦🇷",
+  "confederation": "CONMEBOL",
+  "tier": 1,
+  "season": "2025",
+  "rounds": 27,
+  "teams": [
+    { "id": "riv", "name": "River Plate", "shortName": "RIV", "overall": 82, "attack": 84, "defense": 78, "logo": "https://upload.wikimedia.org/wikipedia/commons/a/a9/River_Plate_logo.svg" },
+    { "id": "boc", "name": "Boca Juniors", "shortName": "BOC", "overall": 81, "attack": 81, "defense": 80, "logo": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Boca_Juniors_logo.svg" },
+    { "id": "ind", "name": "Independiente", "shortName": "IND", "overall": 74, "attack": 73, "defense": 73, "logo": "https://upload.wikimedia.org/wikipedia/en/7/71/Independiente_logo.svg" },
+    { "id": "rac", "name": "Racing Club", "shortName": "RAC", "overall": 76, "attack": 76, "defense": 74, "logo": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Racing_Club_logo.svg" },
+    { "id": "san", "name": "San Lorenzo", "shortName": "SAN", "overall": 73, "attack": 72, "defense": 72, "logo": "https://upload.wikimedia.org/wikipedia/en/8/84/San_Lorenzo_de_Almagro_logo.svg" },
+    { "id": "hms", "name": "Huracán", "shortName": "HUR", "overall": 69, "attack": 68, "defense": 68, "logo": "https://upload.wikimedia.org/wikipedia/commons/8/8c/Club_Atl%C3%A9tico_Hurac%C3%A1n_logo.svg" },
+    { "id": "vel", "name": "Vélez Sársfield", "shortName": "VEL", "overall": 71, "attack": 70, "defense": 70, "logo": "https://upload.wikimedia.org/wikipedia/en/f/f4/Velez_Sarsfield_logo.svg" },
+    { "id": "est", "name": "Estudiantes LP", "shortName": "EST", "overall": 72, "attack": 71, "defense": 72, "logo": "https://upload.wikimedia.org/wikipedia/en/a/a5/Estudiantes_LP_logo.svg" }
+  ],
+  "trophies": [
+    { "id": "ligaprofesional", "name": "Liga Profesional", "type": "league" },
+    { "id": "copa_argentina", "name": "Copa Argentina", "type": "cup" },
+    { "id": "supercopa_arg", "name": "Supercopa Argentina", "type": "supercup" }
+  ]
+}

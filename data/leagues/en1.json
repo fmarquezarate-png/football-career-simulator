@@ -1,0 +1,25 @@
+{
+  "id": "en1",
+  "name": "Premier League",
+  "country": "Inglaterra",
+  "flag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  "confederation": "UEFA",
+  "tier": 1,
+  "season": "2025/26",
+  "rounds": 38,
+  "teams": [
+    { "id": "mci", "name": "Manchester City", "shortName": "MCI", "overall": 89, "attack": 90, "defense": 85, "logo": "https://upload.wikimedia.org/wikipedia/en/e/eb/Manchester_City_FC_badge.svg" },
+    { "id": "ars", "name": "Arsenal", "shortName": "ARS", "overall": 86, "attack": 87, "defense": 83, "logo": "https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg" },
+    { "id": "liv", "name": "Liverpool", "shortName": "LIV", "overall": 87, "attack": 88, "defense": 83, "logo": "https://upload.wikimedia.org/wikipedia/en/0/0c/Liverpool_FC.svg" },
+    { "id": "mnu", "name": "Manchester United", "shortName": "MNU", "overall": 80, "attack": 80, "defense": 78, "logo": "https://upload.wikimedia.org/wikipedia/en/7/7a/Manchester_United_FC_crest.svg" },
+    { "id": "che", "name": "Chelsea", "shortName": "CHE", "overall": 82, "attack": 83, "defense": 79, "logo": "https://upload.wikimedia.org/wikipedia/en/c/cc/Chelsea_FC.svg" },
+    { "id": "tot", "name": "Tottenham", "shortName": "TOT", "overall": 80, "attack": 81, "defense": 76, "logo": "https://upload.wikimedia.org/wikipedia/en/b/b4/Tottenham_Hotspur.svg" },
+    { "id": "new", "name": "Newcastle United", "shortName": "NEW", "overall": 79, "attack": 78, "defense": 78, "logo": "https://upload.wikimedia.org/wikipedia/en/5/56/Newcastle_United_Logo.svg" },
+    { "id": "avl", "name": "Aston Villa", "shortName": "AVL", "overall": 80, "attack": 80, "defense": 77, "logo": "https://upload.wikimedia.org/wikipedia/de/9/9f/Aston_Villa_FC_logo_%282016%29.svg" }
+  ],
+  "trophies": [
+    { "id": "premierleague", "name": "Premier League", "type": "league" },
+    { "id": "facup", "name": "FA Cup", "type": "cup" },
+    { "id": "efl_cup", "name": "EFL Cup", "type": "cup" }
+  ]
+}

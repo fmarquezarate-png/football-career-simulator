@@ -1,0 +1,37 @@
+{
+  "id": "es1",
+  "name": "LaLiga",
+  "country": "España",
+  "flag": "🇪🇸",
+  "confederation": "UEFA",
+  "tier": 1,
+  "season": "2025/26",
+  "rounds": 38,
+  "teams": [
+    { "id": "fcb", "name": "FC Barcelona", "shortName": "BAR", "overall": 88, "attack": 90, "defense": 82, "logo": "https://upload.wikimedia.org/wikipedia/en/4/47/FC_Barcelona_%28crest%29.svg" },
+    { "id": "rma", "name": "Real Madrid", "shortName": "RMA", "overall": 90, "attack": 91, "defense": 85, "logo": "https://upload.wikimedia.org/wikipedia/en/5/56/Real_Madrid_CF.svg" },
+    { "id": "atm", "name": "Atlético de Madrid", "shortName": "ATM", "overall": 83, "attack": 79, "defense": 86, "logo": "https://upload.wikimedia.org/wikipedia/en/f/f4/Atletico_Madrid_2017_logo.svg" },
+    { "id": "sev", "name": "Sevilla FC", "shortName": "SEV", "overall": 77, "attack": 75, "defense": 75, "logo": "https://upload.wikimedia.org/wikipedia/en/3/3b/Sevilla_fc_logo.svg" },
+    { "id": "vil", "name": "Villarreal CF", "shortName": "VIL", "overall": 78, "attack": 77, "defense": 76, "logo": "https://upload.wikimedia.org/wikipedia/en/b/b9/Villarreal_CF_logo-en.svg" },
+    { "id": "rso", "name": "Real Sociedad", "shortName": "RSO", "overall": 76, "attack": 76, "defense": 74, "logo": "https://upload.wikimedia.org/wikipedia/en/f/f1/Real_Sociedad_logo.svg" },
+    { "id": "ath", "name": "Athletic Club", "shortName": "ATH", "overall": 75, "attack": 72, "defense": 76, "logo": "https://upload.wikimedia.org/wikipedia/en/9/98/Club_Athletic_de_Bilbao_logo.svg" },
+    { "id": "bet", "name": "Real Betis", "shortName": "BET", "overall": 76, "attack": 75, "defense": 74, "logo": "https://upload.wikimedia.org/wikipedia/en/1/13/Real_betis_logo.svg" },
+    { "id": "cel", "name": "RC Celta", "shortName": "CEL", "overall": 72, "attack": 71, "defense": 70, "logo": "https://upload.wikimedia.org/wikipedia/en/f/f3/RC_Celta_de_Vigo_logo.svg" },
+    { "id": "val", "name": "Valencia CF", "shortName": "VAL", "overall": 73, "attack": 71, "defense": 72, "logo": "https://upload.wikimedia.org/wikipedia/en/c/ce/Valenciacf.svg" },
+    { "id": "osa", "name": "CA Osasuna", "shortName": "OSA", "overall": 70, "attack": 67, "defense": 72, "logo": "https://upload.wikimedia.org/wikipedia/en/d/db/Osasuna_logo.svg" },
+    { "id": "gir", "name": "Girona FC", "shortName": "GIR", "overall": 74, "attack": 75, "defense": 71, "logo": "https://upload.wikimedia.org/wikipedia/en/6/6e/Girona_FC_logo.svg" },
+    { "id": "get", "name": "Getafe CF", "shortName": "GET", "overall": 68, "attack": 64, "defense": 72, "logo": "https://upload.wikimedia.org/wikipedia/en/4/46/Getafe_logo.svg" },
+    { "id": "ray", "name": "Rayo Vallecano", "shortName": "RAY", "overall": 68, "attack": 67, "defense": 67, "logo": "https://upload.wikimedia.org/wikipedia/en/e/e1/Rayo_Vallecano_logo.svg" },
+    { "id": "mll", "name": "RCD Mallorca", "shortName": "MLL", "overall": 67, "attack": 64, "defense": 70, "logo": "https://upload.wikimedia.org/wikipedia/en/c/c3/RCD_Mallorca_logo.svg" },
+    { "id": "esp", "name": "RCD Espanyol", "shortName": "ESP", "overall": 68, "attack": 66, "defense": 68, "logo": "https://upload.wikimedia.org/wikipedia/en/7/76/RCD_Espanyol_logo.svg" },
+    { "id": "lgr", "name": "UD Las Palmas", "shortName": "LPA", "overall": 65, "attack": 64, "defense": 64, "logo": "https://upload.wikimedia.org/wikipedia/en/7/76/UD_Las_Palmas_logo.svg" },
+    { "id": "ala", "name": "Deportivo Alavés", "shortName": "ALA", "overall": 64, "attack": 62, "defense": 65, "logo": "https://upload.wikimedia.org/wikipedia/en/9/93/Deportivo_Alaves_logo.svg" },
+    { "id": "leg", "name": "CD Leganés", "shortName": "LEG", "overall": 63, "attack": 61, "defense": 64, "logo": "https://upload.wikimedia.org/wikipedia/en/c/c4/Deportivo_Leganes_logo.svg" },
+    { "id": "val2", "name": "Valladolid CF", "shortName": "VLL", "overall": 62, "attack": 60, "defense": 62, "logo": "https://upload.wikimedia.org/wikipedia/en/6/64/Real_Valladolid_CF.svg" }
+  ],
+  "trophies": [
+    { "id": "laliga", "name": "LaLiga", "type": "league" },
+    { "id": "copa_rey", "name": "Copa del Rey", "type": "cup" },
+    { "id": "supercopa_es", "name": "Supercopa de España", "type": "supercup" }
+  ]
+}
