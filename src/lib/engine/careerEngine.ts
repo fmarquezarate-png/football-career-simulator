@@ -176,6 +176,9 @@ export function endSeason(state: CareerState): EndSeasonResult {
     teamLeagueFinish: perf.teamLeagueFinish,
     apps: perf.apps, goals: finalGoals, assists: finalAssists, motm: finalMotm,
     avgRating: perf.avgRating, trophies: [], individualAwards: [],
+    breakdown: perf.breakdown,
+    eventGoals: state.seasonStats.goals,
+    eventAssists: state.seasonStats.assists,
   };
 
   const awards = computeAwards(rng, {

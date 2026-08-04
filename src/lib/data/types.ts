@@ -103,6 +103,23 @@ export interface CareerSeasonStats {
   overallAfter?: number;
   /** Qué atributos se movieron y por qué. */
   attributeChanges?: { key: string; delta: number; reason: string }[];
+  /** Por qué salieron estos goles y asistencias. Ver `playerPerformance.ts`. */
+  breakdown?: {
+    expectedGoals: number;
+    expectedAssists: number;
+    leagueRounds: number;
+    startingProb: number;
+    luckGoals: number;
+    luckAssists: number;
+    ratingBase: number;
+    factors: {
+      key: string; label: string; detail: string;
+      multiplier: number; goalsDelta: number; assistsDelta: number;
+    }[];
+  };
+  /** Goles y asistencias sumados por decisiones de la temporada. */
+  eventGoals?: number;
+  eventAssists?: number;
 }
 
 export interface Contract {

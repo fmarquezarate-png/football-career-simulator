@@ -17,11 +17,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatMoney, formatNumber } from "@/lib/utils";
 import { ATTRIBUTE_KEYS, ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine/attributes";
 import { safestChoice } from "@/lib/engine/events";
+import { CareerTimeline } from "./career-timeline";
+import { TrophyCase } from "./trophy-art";
 import { EventChoiceDialog } from "./event-dialog";
 import { OffersDialog } from "./offers-dialog";
 import { SeasonSummaryDialog } from "./season-summary-dialog";
 import { SyncButton } from "./sync-button";
-import { Trophy, Home, RefreshCcw, Zap } from "lucide-react";
+import { Home, RefreshCcw, Zap } from "lucide-react";
 
 export function CareerDashboard({ initialState, onChange }: {
   initialState: CareerState;
@@ -185,26 +187,21 @@ export function CareerDashboard({ initialState, onChange }: {
           </TabsList>
 
           <TabsContent value="history">
-            <Card><CardContent className="pt-6 space-y-4">
-              {state.trophies.length === 0 && state.awards.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aún sin trofeos. Termina una temporada para empezar a levantar títulos.</p>
-              )}
-              {state.awards.length > 0 && (
-                <div>
-                  <div className="text-xs uppercase text-muted-foreground mb-2">Premios individuales</div>
-                  <div className="flex flex-wrap gap-2">
-                    {state.awards.map((a, i) => <Badge key={i} variant="gold"><Trophy className="h-3 w-3 mr-1" />{a}</Badge>)}
+            <Card><CardContent className="pt-6 space-y-5">
+              {(state.trophies.length > 0 || state.awards.length > 0) && (
+                <div className="rounded-xl border border-border bg-black/20 p-4">
+                  <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Vitrina · {state.trophies.length + state.awards.length} títulos
                   </div>
+                  <TrophyCase trophies={[...state.awards, ...state.trophies]} showLabels />
                 </div>
               )}
-              {state.trophies.length > 0 && (
-                <div>
-                  <div className="text-xs uppercase text-muted-foreground mb-2">Trofeos de club</div>
-                  <div className="flex flex-wrap gap-2">
-                    {state.trophies.map((t, i) => <Badge key={i}>{t}</Badge>)}
-                  </div>
+              <div>
+                <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Temporada a temporada
                 </div>
-              )}
+                <CareerTimeline history={state.history} />
+              </div>
             </CardContent></Card>
           </TabsContent>
 

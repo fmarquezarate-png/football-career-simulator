@@ -117,8 +117,11 @@ export function AppNav() {
       {/* Panel lateral (móvil) */}
       <div
         className={cn(
-          "fixed inset-0 z-50 md:hidden",
-          open ? "pointer-events-auto" : "pointer-events-none",
+          // `overflow-hidden` recorta el panel cuando está desplazado fuera de
+          // pantalla; sin él, el aside en `translate-x-full` genera scroll
+          // horizontal en toda la app en móvil.
+          "fixed inset-0 z-50 overflow-hidden md:hidden",
+          open ? "pointer-events-auto visible" : "pointer-events-none invisible",
         )}
         aria-hidden={!open}
       >

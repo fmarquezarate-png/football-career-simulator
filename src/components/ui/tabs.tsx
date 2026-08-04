@@ -12,7 +12,10 @@ export const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-secondary p-1 text-muted-foreground",
+      // `max-w-full` + scroll horizontal propio: con cuatro o más pestañas la
+      // barra no cabe en móvil y, sin esto, desbordaba la página entera.
+      // `scrollbar-none` evita la barra fea en escritorio.
+      "inline-flex h-10 max-w-full items-center justify-start overflow-x-auto rounded-md bg-secondary p-1 text-muted-foreground scrollbar-none",
       className,
     )}
     {...props}

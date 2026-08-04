@@ -136,6 +136,20 @@ supabase/migrations/          # Esquema SQL
 legacy/                       # Versión vanilla-JS anterior (referencia)
 ```
 
+## 📋 Al cerrar cada temporada
+
+- **Ficha de un vistazo**: edad, escudo y club, partidos, goles, asistencias,
+  nota media y media final.
+- **«¿Por qué estos números?»**: separa lo que el modelo esperaba de ti, lo que
+  puso el azar, lo que sumaron tus decisiones y el total real; y pondera cuánto
+  aportó cada factor (tu nivel, la moral, los minutos, el ataque del equipo)
+  **frente a un futbolista de nivel medio**.
+- **Trofeos dibujados**, no escritos: cada competición tiene su silueta.
+- **Línea temporal** temporada a temporada: tabla en escritorio, tarjetas en
+  móvil.
+
+Ver [`CHANGELOG.md`](CHANGELOG.md) para el historial completo de cambios.
+
 ## 🛡️ Escudos de los clubes
 
 Los escudos viven en `public/crests/<teamId>.png` y se sirven desde el propio

@@ -118,3 +118,10 @@
   background-clip: text;
   color: transparent;
 }
+
+/* Scroll sin barra visible (pestañas en móvil) */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar { display: none; }
