@@ -11,12 +11,42 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 ## [No publicado]
 
 ### Pendiente
-- Inicio de sesión con Google: la app sigue mostrando «Modo invitado» porque
-  las claves `NEXT_PUBLIC_*` no llegan al bundle de cliente. Ver
-  [`docs/google-oauth.md`](docs/google-oauth.md).
 - Escudos reales para las nueve ligas de fuera de Europa: la única fuente
   abierta encontrada cubre solo las 25 ligas europeas principales. Esos 144
   clubes usan un escudo generado con sus colores reales.
+- Fase de grupos del Mundial jugable y rondas de copa partido a partido.
+
+---
+
+## [2.5.0] — Decimales y diagnóstico del login
+
+### Corregido
+- **Los decimales se desbordaban por toda la interfaz**: moral 62,5, medias
+  con cola infinita, notas con dos decimales. El origen estaba en el motor:
+  al amplificar el lado malo de una decisión según la dificultad se
+  multiplicaba por 1,25 o 1,5 **sin redondear**, y moral, reputación y forma
+  son valores enteros.
+
+  Ahora el motor redondea en origen —enteros donde toca, un decimal en la
+  media y la nota— y la interfaz aplica una regla única (`fmt`): **como mucho
+  un decimal, y ninguno si el número es entero**. Las partidas guardadas que
+  ya arrastraban decimales se sanean al cargarlas.
+
+  Verificado con una prueba que recorre 60 carreras de 12 temporadas
+  comprobando cada valor del estado, de los resúmenes, de los desgloses y de
+  las ofertas: cero números con más de un decimal.
+- El precio de traspaso heredaba los decimales del tope presupuestario del
+  club cuando la operación chocaba con él.
+
+### Añadido
+- **Página `/diagnostico`** para el inicio de sesión. «No funciona el login»
+  tiene tres causas que desde fuera se parecen: las variables no están, están
+  pero no en el entorno que sirve esa URL, o están bien pero el build es
+  anterior a añadirlas. La página compara **lo que ve el servidor** con **lo
+  que quedó incrustado en el bundle del navegador**, prueba la conexión real
+  con Supabase y dice cuál de los tres casos es y qué hacer. No muestra
+  ninguna clave.
+- El botón «Modo invitado» deja de ser un botón muerto y lleva al diagnóstico.
 
 ---
 

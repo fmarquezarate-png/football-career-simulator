@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import type { AppliedEventOutcome, CareerState, EventChoice, EventTemplate } from "@/lib/data/types";
 import { effectiveSuccessChance } from "@/lib/engine/events";
-import { cn } from "@/lib/utils";
+import { cn, fmtDelta } from "@/lib/utils";
 
 type Phase = "choosing" | "rolling" | "result";
 
@@ -344,7 +344,7 @@ function OutcomePanel({
                     positive ? "text-primary" : "text-destructive",
                   )}
                 >
-                  {positive ? "+" : ""}{r.value}
+                  {fmtDelta(r.value)}
                 </span>
               </li>
             );

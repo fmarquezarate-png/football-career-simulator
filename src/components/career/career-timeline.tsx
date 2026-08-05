@@ -3,7 +3,7 @@ import Image from "next/image";
 import type { CareerSeasonStats } from "@/lib/data/types";
 import { getTeam } from "@/lib/data/loader";
 import { TrophyCase } from "./trophy-art";
-import { cn } from "@/lib/utils";
+import { cn, fmt } from "@/lib/utils";
 
 /**
  * Línea temporal de la carrera, temporada a temporada.
@@ -83,7 +83,7 @@ function DesktopRow({ s }: { s: CareerSeasonStats }) {
       <td className="px-2 py-2.5 text-center tabular-nums">{s.apps}</td>
       <td className="px-2 py-2.5 text-center font-bold tabular-nums text-primary">{s.goals}</td>
       <td className="px-2 py-2.5 text-center font-bold tabular-nums text-sky-300">{s.assists}</td>
-      <td className="px-2 py-2.5 text-center tabular-nums">{s.avgRating.toFixed(2)}</td>
+      <td className="px-2 py-2.5 text-center tabular-nums">{fmt(s.avgRating)}</td>
       <td className="px-2 py-2.5">
         <TrophyCase trophies={trophiesOf(s)} size="sm" />
       </td>
@@ -113,7 +113,7 @@ function MobileRow({ s }: { s: CareerSeasonStats }) {
         <Cell label="PJ" value={s.apps} />
         <Cell label="Gls" value={s.goals} tone="text-primary" />
         <Cell label="Ast" value={s.assists} tone="text-sky-300" />
-        <Cell label="Nota" value={s.avgRating.toFixed(2)} />
+        <Cell label="Nota" value={fmt(s.avgRating)} />
       </dl>
 
       {trophiesOf(s).length > 0 && (

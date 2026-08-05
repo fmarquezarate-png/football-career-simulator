@@ -67,7 +67,9 @@ function computeWage(rng: Rng, state: CareerState, team: Team, interest: number)
 function computeFee(rng: Rng, state: CareerState, team: Team, interest: number): number {
   const baseMillions = Math.pow(Math.max(0, state.overall - 55), 2.2) * 0.35;
   const ageAdj = state.age <= 26 ? 1.2 : state.age <= 30 ? 1.0 : state.age <= 33 ? 0.55 : 0.2;
-  const budgetCap = team.budget * 0.9;
+  // El tope se redondea antes de comparar: si no, cuando el traspaso topa con
+  // el presupuesto del club, el precio heredaba los decimales del tope.
+  const budgetCap = Math.round(team.budget * 0.9);
   const raw = baseMillions * 1_000_000 * ageAdj * normal(rng, 1, 0.15) * clamp(interest / 120, 0.6, 1.8);
   return Math.max(0, Math.min(budgetCap, Math.round(raw)));
 }

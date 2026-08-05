@@ -6,6 +6,7 @@ import { getLeague, getAllLeagues, getTeam, findTeamByName } from "../data/loade
 import { DIFFICULTY_PROFILES } from "../data/difficulty";
 import { assignStartingClub, leagueStrength, type ClubTier } from "./clubAssignment";
 import { makeRng, clamp, normal, type Rng } from "./rng";
+import { round1 } from "../utils";
 import { penaltyOutcomeEffects, type PenaltyContext, type PenaltyResult } from "./penalty";
 import {
   applyOverallDeltaToAttributes, capToPotential, evolveAttributes,
@@ -88,8 +89,23 @@ export function newCareer(params: NewCareerParams): CareerState {
  * no encontrarlos. Se reasigna por nombre y, si tampoco cuadra, al club más
  * parecido en nivel dentro de la liga del jugador.
  */
+function sanitizeNumbers(state: CareerState): CareerState {
+  return {
+    ...state,
+    overall: Math.round(state.overall),
+    potential: Math.round(state.potential),
+    morale: Math.round(state.morale),
+    reputation: Math.round(state.reputation),
+    fitness: Math.round(state.fitness),
+  };
+}
+
 export function migrateCareer(state: CareerState): CareerState {
-  if (getTeam(state.currentTeamId)) return state;
+  const needsRounding = [state.overall, state.morale, state.reputation, state.fitness]
+    .some(v => !Number.isInteger(v));
+  if (getTeam(state.currentTeamId)) {
+    return needsRounding ? sanitizeNumbers(state) : state;
+  }
 
   const byName = findTeamByName(state.currentTeamName);
   const target = byName ?? (() => {
@@ -101,7 +117,7 @@ export function migrateCareer(state: CareerState): CareerState {
   })();
 
   return {
-    ...state,
+    ...sanitizeNumbers(state),
     currentTeamId: target.team.id,
     currentTeamName: target.team.name,
     currentLeagueId: target.league.id,
@@ -146,10 +162,10 @@ export function resolveEvent(
   const newState: CareerState = {
     ...state,
     attributes,
-    overall: clamp(overallFromAttributes(attributes, state.position), 45, Math.min(99, state.potential + 3)),
-    morale: clamp(state.morale + outcome.moraleDelta, 0, 100),
-    reputation: clamp(state.reputation + outcome.reputationDelta, 0, 100),
-    fitness: clamp(state.fitness + outcome.fitnessDelta, 20, 100),
+    overall: Math.round(clamp(overallFromAttributes(attributes, state.position), 45, Math.min(99, state.potential + 3))),
+    morale: Math.round(clamp(state.morale + outcome.moraleDelta, 0, 100)),
+    reputation: Math.round(clamp(state.reputation + outcome.reputationDelta, 0, 100)),
+    fitness: Math.round(clamp(state.fitness + outcome.fitnessDelta, 20, 100)),
     seasonStats: {
       ...state.seasonStats,
       goals: Math.max(0, state.seasonStats.goals + outcome.goalsBoost),
@@ -164,7 +180,13 @@ export function resolveEvent(
   return { state: newState, outcome };
 }
 
-/** Escala solo los deltas negativos por el factor de varianza de la dificultad. */
+/**
+ * Escala solo los deltas negativos por el factor de varianza de la dificultad.
+ *
+ * Redondea siempre: moral, reputación y forma son enteros (0-100) y la media
+ * lleva como mucho un decimal. Sin esto, multiplicar por 1,25 dejaba moral
+ * 62,5 y medias con cola decimal infinita paseándose por toda la interfaz.
+ */
 function amplifyDownside(o: AppliedEventOutcome, variance: number): AppliedEventOutcome {
   if (variance === 1) return o;
   const down = (v: number) => (v < 0 ? v * variance : v);
@@ -172,10 +194,10 @@ function amplifyDownside(o: AppliedEventOutcome, variance: number): AppliedEvent
     ...o,
     goalsBoost: Math.round(down(o.goalsBoost)),
     assistsBoost: Math.round(down(o.assistsBoost)),
-    moraleDelta: down(o.moraleDelta),
-    reputationDelta: down(o.reputationDelta),
-    overallDelta: down(o.overallDelta),
-    fitnessDelta: down(o.fitnessDelta),
+    moraleDelta: Math.round(down(o.moraleDelta)),
+    reputationDelta: Math.round(down(o.reputationDelta)),
+    overallDelta: round1(down(o.overallDelta)),
+    fitnessDelta: Math.round(down(o.fitnessDelta)),
   };
 }
 
@@ -280,8 +302,8 @@ export function endSeason(state: CareerState): EndSeasonResult {
     age: newAge,
     attributes: evolved.attributes,
     overall: Math.round(newOverall),
-    reputation: clamp(state.reputation + seasonStats.trophies.length * 3 + seasonStats.individualAwards.length * 6 + Math.max(0, seasonStats.avgRating - 7) * 4, 0, 100),
-    morale: clamp(60 + seasonStats.avgRating * 4, 0, 100),
+    reputation: Math.round(clamp(state.reputation + seasonStats.trophies.length * 3 + seasonStats.individualAwards.length * 6 + Math.max(0, seasonStats.avgRating - 7) * 4, 0, 100)),
+    morale: Math.round(clamp(60 + seasonStats.avgRating * 4, 0, 100)),
     fitness: 100,
     seasonStats: { goals: 0, assists: 0, apps: 0, motm: 0 },
     totals: {

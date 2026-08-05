@@ -179,6 +179,16 @@ Las ligas se definen en [`scripts/leagues.config.mjs`](scripts/leagues.config.mj
 la fuerza de cada competición gobierna la media de sus equipos, sus
 presupuestos y lo difícil que es dar el salto desde ella.
 
+## 🩺 ¿El inicio de sesión no aparece?
+
+Visita **`/diagnostico`** en tu despliegue. Compara lo que ve el servidor con
+lo que quedó incrustado en el bundle del navegador, prueba la conexión con
+Supabase y te dice exactamente qué falta. No muestra ninguna clave.
+
+El fallo más habitual: las variables `NEXT_PUBLIC_*` se incrustan **al
+compilar**, así que si las añades después de un despliegue hay que volver a
+desplegar **desmarcando «Use existing Build Cache»**.
+
 ## 🧪 Comandos
 
 ```bash

@@ -10,7 +10,7 @@ import type { CareerSeasonStats } from "@/lib/data/types";
 import { getTeam } from "@/lib/data/loader";
 import { ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine/attributes";
 import { TrophyCase } from "./trophy-art";
-import { cn } from "@/lib/utils";
+import { cn, fmt, fmtDelta } from "@/lib/utils";
 
 /**
  * Cierre de temporada. Arriba, la ficha de un vistazo (edad, club, media,
@@ -54,7 +54,7 @@ export function SeasonSummaryDialog({
           <Metric label="PJ" value={summary.apps} />
           <Metric label="Goles" value={summary.goals} accent />
           <Metric label="Asist." value={summary.assists} accent />
-          <Metric label="Nota" value={summary.avgRating.toFixed(2)} />
+          <Metric label="Nota" value={fmt(summary.avgRating)} />
           <Metric
             label="Media"
             value={summary.overallAfter ?? "—"}
@@ -149,17 +149,17 @@ function WhyPanel({ summary }: { summary: CareerSeasonStats }) {
         <ul className="space-y-1.5 text-sm">
           <Line
             label="Lo que se esperaba de ti"
-            value={`${b.expectedGoals} G · ${b.expectedAssists} A`}
+            value={`${fmt(b.expectedGoals)} G · ${fmt(b.expectedAssists)} A`}
           />
           <Line
             label="El azar de cada remate"
-            value={`${fmt(b.luckGoals)} G · ${fmt(b.luckAssists)} A`}
+            value={`${fmtDelta(b.luckGoals)} G · ${fmtDelta(b.luckAssists)} A`}
             tone={b.luckGoals + b.luckAssists >= 0 ? "good" : "bad"}
           />
           {((summary.eventGoals ?? 0) !== 0 || (summary.eventAssists ?? 0) !== 0) && (
             <Line
               label="Tus decisiones de la temporada"
-              value={`${fmt(summary.eventGoals ?? 0)} G · ${fmt(summary.eventAssists ?? 0)} A`}
+              value={`${fmtDelta(summary.eventGoals ?? 0)} G · ${fmtDelta(summary.eventAssists ?? 0)} A`}
               tone={(summary.eventGoals ?? 0) + (summary.eventAssists ?? 0) >= 0 ? "good" : "bad"}
             />
           )}
@@ -185,7 +185,7 @@ function WhyPanel({ summary }: { summary: CareerSeasonStats }) {
                       positive ? "text-primary" : "text-destructive",
                     )}
                   >
-                    {positive ? "+" : ""}{total.toFixed(1)} G+A
+                    {fmtDelta(total)} G+A
                   </span>
                 </div>
                 <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-secondary">
@@ -210,7 +210,7 @@ function WhyPanel({ summary }: { summary: CareerSeasonStats }) {
             {summary.attributeChanges!.map((c, i) => (
               <li key={i} className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                 <span className={cn("font-black", c.delta > 0 ? "text-primary" : "text-destructive")}>
-                  {c.delta > 0 ? "+" : ""}{c.delta}
+                  {fmtDelta(c.delta)}
                 </span>
                 <span className="font-semibold text-foreground">
                   {ATTRIBUTE_LABEL[c.key as AttributeKey] ?? c.key}
@@ -223,16 +223,12 @@ function WhyPanel({ summary }: { summary: CareerSeasonStats }) {
       )}
 
       <p className="border-t border-border pt-3 text-[11px] leading-relaxed text-muted-foreground">
-        Tu nota media parte de {b.ratingBase} y sube con cada gol o asistencia por
+        Tu nota media parte de {fmt(b.ratingBase)} y sube con cada gol o asistencia por
         partido. La <strong>forma física</strong> decide cuántos partidos aguantas;
         la <strong>moral</strong>, cuánto rindes en ellos.
       </p>
     </div>
   );
-}
-
-function fmt(v: number): string {
-  return `${v >= 0 ? "+" : ""}${v}`;
 }
 
 function Line({

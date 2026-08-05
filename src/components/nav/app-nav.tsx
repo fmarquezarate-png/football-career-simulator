@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BarChart3, Bookmark, LogIn, LogOut, Menu, Plus, Trophy, Users, X,
+  BarChart3, Bookmark, LogIn, LogOut, Menu, Plus, Stethoscope, Trophy, Users, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ interface NavItem {
   icon: React.ReactNode;
   /** Requiere sesión iniciada. */
   auth?: boolean;
+  /** Solo se muestra si el login no está disponible. */
+  guestOnly?: boolean;
 }
 
 const ITEMS: NavItem[] = [
@@ -45,6 +47,14 @@ const ITEMS: NavItem[] = [
     description: "Enfrenta dos carreras públicas lado a lado",
     icon: <BarChart3 className="h-5 w-5" />,
   },
+  {
+    href: "/diagnostico",
+    label: "Diagnóstico",
+    description: "Por qué no funciona el inicio de sesión",
+    icon: <Stethoscope className="h-5 w-5" />,
+    // Solo cuando hay algo que diagnosticar.
+    guestOnly: true,
+  },
 ];
 
 export function AppNav() {
@@ -69,7 +79,8 @@ export function AppNav() {
     };
   }, [open]);
 
-  const visible = ITEMS.filter(i => !i.auth || (configured && user));
+  const visible = ITEMS.filter(i =>
+    (!i.auth || (configured && user)) && (!i.guestOnly || !configured));
 
   return (
     <>
@@ -196,10 +207,13 @@ function AuthAction({
   full?: boolean;
 }) {
   if (!configured) {
+    // En vez de un botón muerto, lleva al diagnóstico: explica por qué el
+    // login no está disponible y qué hacer para activarlo.
     return (
-      <Button variant="outline" size="sm" disabled className={full ? "w-full" : undefined}
-        title="Supabase no configurado — juegas como invitado">
-        Modo invitado
+      <Button asChild variant="outline" size="sm" className={full ? "w-full" : undefined}>
+        <Link href="/diagnostico" title="El inicio de sesión no está disponible. Ver por qué.">
+          Modo invitado · ¿por qué?
+        </Link>
       </Button>
     );
   }

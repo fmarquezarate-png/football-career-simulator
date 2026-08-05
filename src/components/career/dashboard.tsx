@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatMoney, formatNumber } from "@/lib/utils";
+import { fmt, fmtDelta, formatMoney, formatNumber } from "@/lib/utils";
 import { ATTRIBUTE_KEYS, ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine/attributes";
 import { safestChoice } from "@/lib/engine/events";
 import { CareerTimeline } from "./career-timeline";
@@ -157,9 +157,9 @@ export function CareerDashboard({ initialState, onChange }: {
               {POSITION_LABEL[state.position]} · {state.age} años
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <Stat label="OVR" value={state.overall} color="primary" />
-              <Stat label="POT" value={state.potential} color="gold" />
-              <Stat label="REP" value={state.reputation} color="secondary" />
+              <Stat label="OVR" value={fmt(state.overall)} color="primary" />
+              <Stat label="POT" value={fmt(state.potential)} color="gold" />
+              <Stat label="REP" value={fmt(state.reputation)} color="secondary" />
             </div>
           </CardContent>
         </Card>
@@ -179,8 +179,8 @@ export function CareerDashboard({ initialState, onChange }: {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Temporada {state.seasonNumber}</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Moral"><Progress value={state.morale} /><span className="text-xs ml-2">{state.morale}</span></Row>
-            <Row label="Fitness"><Progress value={state.fitness} /><span className="text-xs ml-2">{state.fitness}</span></Row>
+            <Row label="Moral"><Progress value={state.morale} /><span className="text-xs ml-2">{fmt(state.morale)}</span></Row>
+            <Row label="Fitness"><Progress value={state.fitness} /><span className="text-xs ml-2">{fmt(state.fitness)}</span></Row>
             <div className="text-xs text-muted-foreground pt-1">Eventos restantes: {state.currentSeasonEventsRemaining}</div>
           </CardContent>
         </Card>
@@ -260,7 +260,7 @@ export function CareerDashboard({ initialState, onChange }: {
                         <td className="text-center font-semibold">{s.goals}</td>
                         <td className="text-center">{s.assists}</td>
                         <td className="text-center">{s.motm}</td>
-                        <td className="text-center">{s.avgRating}</td>
+                        <td className="text-center">{fmt(s.avgRating)}</td>
                         <td className="text-xs">{[...s.trophies, ...s.individualAwards].join(", ") || "—"}</td>
                       </tr>
                     ))}
@@ -274,7 +274,7 @@ export function CareerDashboard({ initialState, onChange }: {
           <TabsContent value="attrs">
             <Card><CardContent className="pt-6 space-y-4">
               <p className="text-xs text-muted-foreground">
-                Tu media <span className="font-bold text-primary">{state.overall}</span> sale
+                Tu media <span className="font-bold text-primary">{fmt(state.overall)}</span> sale
                 de estos atributos según tu posición ({POSITION_LABEL[state.position]}).
                 Se mueven con cada decisión y con lo que hagas en el campo.
               </p>
@@ -289,10 +289,10 @@ export function CareerDashboard({ initialState, onChange }: {
                         <span className="flex items-center gap-1.5">
                           {last && (
                             <span className={last.delta > 0 ? "text-primary text-xs" : "text-destructive text-xs"}>
-                              {last.delta > 0 ? "+" : ""}{last.delta}
+                              {fmtDelta(last.delta)}
                             </span>
                           )}
-                          <span className="font-bold">{v}</span>
+                          <span className="font-bold">{fmt(v)}</span>
                         </span>
                       </div>
                       <Progress value={v} />
@@ -309,7 +309,7 @@ export function CareerDashboard({ initialState, onChange }: {
                     {state.history.at(-1)!.attributeChanges!.map((c, i) => (
                       <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span className={c.delta > 0 ? "font-bold text-primary" : "font-bold text-destructive"}>
-                          {c.delta > 0 ? "+" : ""}{c.delta}
+                          {fmtDelta(c.delta)}
                         </span>
                         <span className="font-semibold text-foreground">
                           {ATTRIBUTE_LABEL[c.key as AttributeKey] ?? c.key}
@@ -384,7 +384,7 @@ export function CareerDashboard({ initialState, onChange }: {
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+function Stat({ label, value, color }: { label: string; value: number | string; color: string }) {
   const colorMap: Record<string, string> = { primary: "text-primary", gold: "text-gold", secondary: "text-muted-foreground" };
   return (
     <div>
