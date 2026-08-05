@@ -10,6 +10,48 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 
 ## [No publicado]
 
+## [2.7.0] — La carrera en una sola pantalla
+
+Rediseño completo de la pantalla de carrera, siguiendo la referencia que pasó
+Fran (copero.com.ar). El cambio de fondo no es de estilo sino de arquitectura:
+**se acabaron los modales para decidir**.
+
+### Cambiado
+- **La tabla de carrera es la pantalla.** Una fila por edad, de los 18 a los
+  38, con las temporadas que quedan por jugar ya dibujadas en gris: se ve el
+  hueco que falta por llenar y cada temporada cerrada lo va ocupando. Encima,
+  una cabecera con la chapa de media a color, bandera, posición, escudo y club,
+  edad y valor de mercado.
+- **La decisión vive al pie de la tabla, no en un modal.** El jugador tiene
+  delante sus números —media, goles, club, valor— justo mientras elige. Esto
+  hace innecesario el mecanismo de «aparcar la decisión» que se añadió en la
+  2.6.0: ya no hay nada que cerrar para ir a mirar la temporada.
+- **Fuera las pestañas.** Atributos, vitrina, contratos e historial pasan a
+  bloques plegables (`<details>` nativo, sin JS) que en escritorio ocupan la
+  columna de al lado y en móvil se apilan bajo la decisión.
+- El sorteo de éxito/fallo dura ~950 ms en vez de ~1700: encadenar tres
+  decisiones con casi dos segundos de espera cada una se hacía pesado.
+- Los cambios de atributo se agrupan por motivo. El desarrollo normal de una
+  temporada escupía seis líneas idénticas de «Desarrollo a los 19».
+
+### Añadido
+- **Valor de mercado.** Crece de forma muy no lineal con la media, se hunde a
+  partir de los 29 y depende de la liga: el mismo futbolista vale más en la
+  Premier que en Primera de Chile, porque ahí está el dinero que lo puede
+  pagar. Formato compacto: `€450K`, `€12,5M`.
+- La selección queda fijada al pie de la tabla como una fila más, con
+  partidos y goles internacionales acumulados.
+
+### Eliminado
+- `event-dialog.tsx` y `career-timeline.tsx`: los sustituyen el panel de
+  decisión en línea y la tabla de carrera.
+
+### Probado
+- 18 comprobaciones en escritorio (1280 px) y otras 18 en móvil (390 px) sobre
+  el build de producción: temporada completa con sus tres decisiones, resumen,
+  mercado de fichajes y arranque de la siguiente, sin errores de consola, sin
+  scroll horizontal y sin decimales largos.
+
 ### Seguridad
 - La migración endurece sus dos funciones de trigger, siguiendo el linter de
   Supabase: `touch_updated_at` fija `search_path` (sin él se puede secuestrar
