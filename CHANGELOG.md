@@ -10,10 +10,15 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 
 ## [No publicado]
 
+### Añadido
+- `scripts/fetch-world-crests.mjs`: descarga los escudos oficiales de las nueve
+  ligas de fuera de Europa desde **TheSportsDB** y, como alternativa,
+  **Wikipedia / Wikimedia Commons**. Sustituye los blasones generados y deja
+  listados los clubes que no encuentre para afinarlos con un campo `search`.
+
 ### Pendiente
-- Escudos reales para las nueve ligas de fuera de Europa: la única fuente
-  abierta encontrada cubre solo las 25 ligas europeas principales. Esos 144
-  clubes usan un escudo generado con sus colores reales.
+- Ejecutar `fetch-world-crests.mjs` y subir el resultado: los 144 clubes de
+  fuera de Europa siguen con su escudo generado hasta entonces.
 - Fase de grupos del Mundial jugable y rondas de copa partido a partido.
 
 ---

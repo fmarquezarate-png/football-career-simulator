@@ -13,6 +13,11 @@
  *
  * `top` ordena los equipos más fuertes de una liga `repoDir`; el resto se
  * reparte por debajo en orden alfabético estable.
+ *
+ * En las ligas escritas a mano, cada equipo admite un campo opcional `search`
+ * con el nombre a usar al buscar su escudo real en TheSportsDB o Wikipedia
+ * (ver `scripts/fetch-world-crests.mjs`). Solo hace falta cuando el nombre
+ * corto del club no lo identifica bien: `{ name: "Everton", search: "Everton de Viña del Mar" }`.
  */
 
 export const LEAGUES = [
@@ -132,11 +137,11 @@ export const LEAGUES = [
     teams: [
       { name: "Flamengo", city: "Río de Janeiro", colors: ["#c52613", "#111111"] },
       { name: "Palmeiras", city: "São Paulo", colors: ["#026937", "#ffffff"] },
-      { name: "Botafogo", city: "Río de Janeiro", colors: ["#111111", "#ffffff"] },
+      { name: "Botafogo", city: "Río de Janeiro", colors: ["#111111", "#ffffff"], search: "Botafogo de Futebol e Regatas" },
       { name: "São Paulo FC", city: "São Paulo", colors: ["#c8102e", "#111111"] },
       { name: "Fluminense", city: "Río de Janeiro", colors: ["#870A28", "#00613C"] },
       { name: "Atlético Mineiro", city: "Belo Horizonte", colors: ["#111111", "#ffffff"] },
-      { name: "Internacional", city: "Porto Alegre", colors: ["#c8102e", "#ffffff"] },
+      { name: "Internacional", city: "Porto Alegre", colors: ["#c8102e", "#ffffff"], search: "Sport Club Internacional" },
       { name: "Grêmio", city: "Porto Alegre", colors: ["#0d80bf", "#111111"] },
       { name: "Corinthians", city: "São Paulo", colors: ["#111111", "#ffffff"] },
       { name: "Cruzeiro", city: "Belo Horizonte", colors: ["#1e3a8a", "#ffffff"] },
@@ -265,10 +270,10 @@ export const LEAGUES = [
       { name: "Atlético Nacional", city: "Medellín", colors: ["#046a38", "#ffffff"] },
       { name: "Millonarios", city: "Bogotá", colors: ["#0a3d91", "#ffffff"] },
       { name: "América de Cali", city: "Cali", colors: ["#c8102e", "#ffffff"] },
-      { name: "Junior", city: "Barranquilla", colors: ["#c8102e", "#ffffff"] },
+      { name: "Junior", city: "Barranquilla", colors: ["#c8102e", "#ffffff"], search: "Atlético Junior" },
       { name: "Deportivo Cali", city: "Cali", colors: ["#046a38", "#ffffff"] },
       { name: "Independiente Medellín", city: "Medellín", colors: ["#c8102e", "#0a3d91"] },
-      { name: "Santa Fe", city: "Bogotá", colors: ["#c8102e", "#ffffff"] },
+      { name: "Santa Fe", city: "Bogotá", colors: ["#c8102e", "#ffffff"], search: "Independiente Santa Fe" },
       { name: "Deportes Tolima", city: "Ibagué", colors: ["#f4c430", "#c8102e"] },
       { name: "Once Caldas", city: "Manizales", colors: ["#ffffff", "#046a38"] },
       { name: "Atlético Bucaramanga", city: "Bucaramanga", colors: ["#f4c430", "#046a38"] },
@@ -295,7 +300,7 @@ export const LEAGUES = [
       { name: "Unión Española", city: "Santiago", colors: ["#c8102e", "#ffffff"] },
       { name: "Cobresal", city: "El Salvador", colors: ["#f4a900", "#111111"] },
       { name: "Ñublense", city: "Chillán", colors: ["#c8102e", "#0a3d91"] },
-      { name: "Everton", city: "Viña del Mar", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Everton", city: "Viña del Mar", colors: ["#0a3d91", "#f4c430"], search: "Everton de Viña del Mar" },
       { name: "Deportes Iquique", city: "Iquique", colors: ["#c8102e", "#ffffff"] },
       { name: "Unión La Calera", city: "La Calera", colors: ["#c8102e", "#111111"] },
       { name: "Deportes Limache", city: "Limache", colors: ["#046a38", "#ffffff"] },
@@ -307,7 +312,7 @@ export const LEAGUES = [
     confederation: "CONMEBOL", strength: 59, rounds: 30,
     teams: [
       { name: "Peñarol", city: "Montevideo", colors: ["#f4c430", "#111111"] },
-      { name: "Nacional", city: "Montevideo", colors: ["#ffffff", "#0a3d91"] },
+      { name: "Nacional", city: "Montevideo", colors: ["#ffffff", "#0a3d91"], search: "Club Nacional de Football" },
       { name: "Defensor Sporting", city: "Montevideo", colors: ["#5b2a86", "#ffffff"] },
       { name: "Liverpool FC Montevideo", city: "Montevideo", colors: ["#111111", "#0a3d91"] },
       { name: "Danubio", city: "Montevideo", colors: ["#ffffff", "#111111"] },

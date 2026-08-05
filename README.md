@@ -164,9 +164,24 @@ Los escudos viven en `public/crests/<teamId>.png` y se sirven desde el propio
 dominio. **No se enlazan desde Wikipedia**: `upload.wikimedia.org` responde 403
 al hotlinking desde otro dominio, así que enlazados no cargaban nunca.
 
-Las 24 ligas europeas usan el escudo real del club. Las nueve de fuera de
-Europa usan un escudo generado a partir de los colores reales de cada club: la
-única fuente abierta que encontramos cubre solo las competiciones europeas.
+Las 24 ligas europeas usan el escudo real del club, incluido en el repositorio.
+
+Las nueve de fuera de Europa (Chile, Argentina, Brasil, México, EE. UU.,
+Japón, Colombia, Uruguay y Arabia Saudí) traen de serie un escudo generado con
+los colores reales de cada club. Para sustituirlos por los oficiales:
+
+```bash
+node scripts/fetch-world-crests.mjs --dry   # ver qué encontraría
+node scripts/fetch-world-crests.mjs         # descargar y actualizar
+```
+
+Busca cada club en **TheSportsDB** y, si no aparece, en **Wikipedia /
+Wikimedia Commons**, descarga el escudo a `public/crests/` y actualiza el JSON
+de la liga. Los que no encuentre conservan el generado y salen listados al
+final: se afinan añadiendo un campo `search` en `scripts/leagues.config.mjs`.
+
+Necesita salida a internet sin filtrar hacia `thesportsdb.com` y
+`wikipedia.org`.
 
 Para regenerar todo el catálogo de ligas, equipos y escudos:
 
