@@ -14,7 +14,6 @@ import { shootPenalty, type PenaltyContext, type PenaltyResult } from "@/lib/eng
 import { makeRng } from "@/lib/engine/rng";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fmt, fmtDelta, formatMoney, formatNumber } from "@/lib/utils";
@@ -47,6 +46,11 @@ export function CareerDashboard({ initialState, onChange }: {
    * decisiones y antes de cerrar, para que sea el clímax de la temporada.
    */
   const [penalty, setPenalty] = useState<PenaltyContext | null>(null);
+  /**
+   * Decisión aparcada. El jugador puede cerrar el diálogo para mirar sus
+   * números y retomarla cuando quiera: no se pierde ni se resuelve sola.
+   */
+  const [paused, setPaused] = useState(false);
   const [lastSummary, setLastSummary] = useState<CareerState["history"][number] | null>(null);
 
   const teamInfo = useMemo(() => getTeam(state.currentTeamId), [state.currentTeamId]);
@@ -94,6 +98,7 @@ export function CareerDashboard({ initialState, onChange }: {
   function handleContinue() {
     setQueue(q => q.slice(1));
     setEventIndex(i => i + 1);
+    setPaused(false);
   }
 
   function handlePenaltyShot(zone: Parameters<typeof shootPenalty>[1], power: Parameters<typeof shootPenalty>[2]) {
@@ -118,6 +123,7 @@ export function CareerDashboard({ initialState, onChange }: {
       update(result.state);
       setQueue([]);
       setEventIndex(0);
+      setPaused(false);
       setOffers(result.offers);
       setLastSummary(result.season);
       return;
@@ -126,6 +132,7 @@ export function CareerDashboard({ initialState, onChange }: {
     update(result.state);
     setQueue([]);
     setEventIndex(0);
+    setPaused(false);
     setOffers(result.offers);
     setLastSummary(result.season);
   }
@@ -142,8 +149,10 @@ export function CareerDashboard({ initialState, onChange }: {
     window.location.href = "/";
   }
 
+  const pendingDecisions = state.currentSeasonEventsRemaining;
+
   // Las decisiones se pausan mientras el cierre de temporada esté en pantalla.
-  const currentEvent = offers || lastSummary || penalty ? undefined : queue[0];
+  const currentEvent = offers || lastSummary || penalty || paused ? undefined : queue[0];
 
   return (
     <div className="container py-6 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -200,11 +209,21 @@ export function CareerDashboard({ initialState, onChange }: {
               <div className="text-sm text-muted-foreground">Ganancia acumulada eventos: aplicada a tus stats de fin de temporada.</div>
             </div>
             <div className="flex flex-wrap gap-2 items-center">
-              {currentEvent && (
-                <Badge className="animate-pulse"><Zap className="h-3 w-3 mr-1" />Evento pendiente</Badge>
+              {pendingDecisions > 0 && (
+                <Button variant={paused ? "default" : "secondary"} onClick={() => setPaused(false)}>
+                  <Zap className="h-4 w-4" />
+                  {paused
+                    ? `Retomar decisiones (${pendingDecisions})`
+                    : `${pendingDecisions} decisiones pendientes`}
+                </Button>
               )}
               <SyncButton state={state} onSaved={update} />
-              <Button onClick={handleEndSeason}>Terminar temporada →</Button>
+              <Button
+                variant={pendingDecisions > 0 ? "outline" : "default"}
+                onClick={handleEndSeason}
+              >
+                Terminar temporada →
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -360,6 +379,7 @@ export function CareerDashboard({ initialState, onChange }: {
           state={state}
           onResolve={(key) => handleResolve(currentEvent, key)}
           onContinue={handleContinue}
+          onDismiss={() => setPaused(true)}
           index={eventIndex}
           total={EVENTS_PER_SEASON}
         />

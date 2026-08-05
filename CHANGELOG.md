@@ -19,7 +19,28 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
   funcionando: se ejecutan como el propietario, no como quien hace la
   petición.
 
+## [2.6.0] — Ritmo de la partida
+
+### Cambiado
+- **3 decisiones por temporada** en lugar de 5. Con cinco, una carrera de 19
+  temporadas pedía 57 decisiones y se hacía interminable.
+- **Catálogo de 74 eventos** (antes 44), cargando en el tramo medio y tardío
+  de carrera, que era donde se secaba.
+- La memoria de eventos pasa de 24 a 120 claves: un evento no vuelve hasta que
+  se agotan todos los que encajan con tu momento de carrera.
+
+### Medido
+- Decisiones de una carrera que repiten un evento ya visto: **del 41 % al 0 %**.
+  Antes la primera repetición llegaba en la temporada 10; ahora una carrera
+  completa no repite ninguna.
+- Las 30 opciones nuevas pasaron el mismo control de dominancia por valor
+  esperado que el resto: se corrigieron 10 casos y quedan 0.
+
 ### Añadido
+- **La decisión se puede aparcar.** Ahora el diálogo se cierra para consultar
+  estadísticas, atributos, palmarés o contratos, y un botón «Retomar
+  decisiones» con el contador la recupera. Una vez elegida una opción ya no se
+  puede cerrar: hay que ver el efecto.
 - `scripts/fetch-world-crests.mjs`: descarga los escudos oficiales de las nueve
   ligas de fuera de Europa desde **TheSportsDB** y, como alternativa,
   **Wikipedia / Wikimedia Commons**. Sustituye los blasones generados y deja

@@ -27,13 +27,14 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
   (élite / grande / mitad de tabla / modesto)
 - Selecciones nacionales + Mundiales cada 4 temporadas
 - Escudos reales de los 96 clubes, servidos en local desde `public/crests/`
-- **45 eventos narrativos** repartidos en once bloques temáticos (cantera,
+- **74 eventos narrativos** repartidos en doce bloques temáticos (cantera,
   cuerpo técnico, vestuario, prensa, físico, mercado, competición, selección,
   estrella, veterano y vida personal). El catálogo se filtra por edad, media,
   reputación, moral, forma y franja del club, así que un canterano de 18 años
   y un veterano de 33 ven repertorios casi disjuntos. El motor además recuerda
-  los 24 últimos eventos vividos para no repetirlos.
-- **5 decisiones por temporada**, resueltas de una en una:
+  los 120 últimos eventos vividos: en una carrera completa no repites ninguno.
+  Puedes cerrar el diálogo para consultar tus números y retomarlo después.
+- **3 decisiones por temporada**, resueltas de una en una:
   eliges → ves el resultado → continúas.
   - **Ninguna opción es gratis.** Cada elección declara sus efectos por
     métrica y el 70% mezcla signo positivo y negativo: ganar reputación cuesta

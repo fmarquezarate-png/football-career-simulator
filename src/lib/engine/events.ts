@@ -569,7 +569,7 @@ const PHYSICAL: EventTemplate[] = [
     title: "Lesión de las que asustan",
     description: "Ligamento tocado. El plazo depende de cómo enfoques la recuperación.",
     weight: 6,
-    conditions: { maxFitness: 70 },
+    conditions: { maxFitness: 78 },
     choices: [
       {
         key: "rush", label: "Forzar la vuelta antes de tiempo",
@@ -1284,7 +1284,7 @@ const PERSONAL: EventTemplate[] = [
     title: "Se te ha ido la ilusión",
     description: "Llevas semanas yendo a entrenar por inercia y el psicólogo del club lo ha notado.",
     weight: 7,
-    conditions: { maxMorale: 45 },
+    conditions: { maxMorale: 58 },
     choices: [
       {
         key: "therapy", label: "Empezar a trabajarlo con el psicólogo",
@@ -1305,9 +1305,833 @@ const PERSONAL: EventTemplate[] = [
   },
 ];
 
+/* ================================================================== */
+/* 12 · Segundo bloque · más recorrido de carrera                      */
+/* ================================================================== */
+
+/**
+ * Ampliación del catálogo. Con 44 eventos, una carrera de 19 temporadas
+ * agotaba el repertorio elegible hacia la temporada 10 y a partir de ahí el
+ * 41 % de las decisiones repetían algo ya visto. Este bloque carga sobre todo
+ * en el tramo medio y tardío, que es donde se secaba.
+ */
+const EXTRA: EventTemplate[] = [
+  {
+    key: "contract_rebel",
+    title: "Te quedas a un año de acabar contrato",
+    description: "El club quiere blindarte ya; tu agente dice que esperes a llegar libre.",
+    weight: 8,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "sign_early", label: "Renovar ahora y quitártelo de encima",
+        description: "Menos dinero del que podrías sacar, cero ruido.",
+        effects: { morale: 8, fitness: 3, reputation: -3 },
+      },
+      {
+        key: "run_down", label: "Agotar el contrato y salir libre",
+        description: "Una prima enorme si aguantas el año entero de presión.",
+        effects: { reputation: 12, morale: 6 },
+        failureEffects: { morale: -16, reputation: -9, goals: -2 },
+        risk: {
+          successChance: 0.42, modifier: "reputation",
+          successLabel: "Aguantas el pulso y firmas el contrato de tu vida.",
+          failureLabel: "El club te aparta del grupo el resto de la temporada.",
+        },
+      },
+      {
+        key: "let_agent", label: "Delegarlo todo en tu agente",
+        description: "Tú al campo, él al despacho.",
+        effects: { overall: 0.6, fitness: 4, morale: -4, reputation: -2 },
+      },
+    ],
+  },
+  {
+    key: "captain_armband_fight",
+    title: "Dos vestuarios, un brazalete",
+    description: "El grupo está partido entre tú y el otro candidato a capitán.",
+    weight: 7,
+    conditions: { minSeason: 4, minReputation: 50 },
+    choices: [
+      {
+        key: "campaign", label: "Mover ficha y buscar apoyos",
+        description: "Hablar uno a uno con el vestuario.",
+        effects: { reputation: 20, morale: 13, overall: 0.5 },
+        failureEffects: { reputation: -9, morale: -12 },
+        risk: {
+          successChance: 0.45, modifier: "reputation",
+          successLabel: "El vestuario se decanta por ti sin fisuras.",
+          failureLabel: "Se sabe que ibas moviendo hilos y queda feo.",
+        },
+      },
+      {
+        key: "step_aside", label: "Apartarte y apoyarle a él",
+        description: "Renunciar al galón a cambio de un vestuario tranquilo.",
+        effects: { morale: 9, assists: 1, reputation: -5 },
+      },
+      {
+        key: "on_pitch", label: "Que lo decida el campo",
+        description: "Ni una palabra: rendimiento y punto.",
+        effects: { overall: 0.9, goals: 1, morale: -3, fitness: -5 },
+      },
+    ],
+  },
+  {
+    key: "referee_controversy",
+    title: "Un arbitraje escandaloso te deja fuera de la final",
+    description: "Penalti inexistente en el descuento. Las cámaras te buscan a la salida.",
+    weight: 8,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "explode", label: "Estallar delante de los micrófonos",
+        description: "Decir lo que piensa todo el vestuario.",
+        effects: { morale: 10, reputation: 6 },
+        failureEffects: { reputation: -12, morale: -6, goals: -2 },
+        risk: {
+          successChance: 0.4,
+          successLabel: "La afición te hace bandera y el club te respalda.",
+          failureLabel: "Cuatro partidos de sanción y multa del comité.",
+        },
+      },
+      {
+        key: "diplomatic", label: "Medir cada palabra",
+        description: "Dejar caer la queja sin mojarte.",
+        effects: { reputation: 3, morale: -5 },
+      },
+      {
+        key: "silent_exit", label: "Salir sin hablar con nadie",
+        description: "Tragarte todo y guardarlo para el campo.",
+        effects: { overall: 0.7, morale: -9, fitness: -3 },
+      },
+    ],
+  },
+  {
+    key: "training_ground_bust_up",
+    title: "Bronca en el entrenamiento",
+    description: "Entrada durísima de un compañero. El grupo se para y os mira.",
+    weight: 8,
+    choices: [
+      {
+        key: "swing_back", label: "Encararte de inmediato",
+        description: "Que no quede duda de que no te pisan.",
+        effects: { morale: 7, reputation: 3 },
+        failureEffects: { reputation: -10, morale: -10, fitness: -6 },
+        risk: {
+          successChance: 0.42, modifier: "morale",
+          successLabel: "Os separan, os dais la mano y todo queda dentro.",
+          failureLabel: "Se filtra el vídeo y el club os multa a los dos.",
+        },
+      },
+      {
+        key: "walk_off", label: "Irte del campo sin decir nada",
+        description: "Evitar el espectáculo aunque parezca huida.",
+        effects: { morale: -6, fitness: 4, reputation: -3 },
+      },
+      {
+        key: "laugh_it", label: "Quitarle hierro delante de todos",
+        description: "Convertirlo en broma y seguir entrenando.",
+        effects: { morale: 6, reputation: 5, overall: -0.3 },
+      },
+    ],
+  },
+  {
+    key: "second_striker",
+    title: "El club ficha a alguien para tu puesto",
+    description: "Llega con cartel y con ficha alta. El míster habla de «competencia sana».",
+    weight: 9,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "outwork", label: "Ganarle el puesto entrenando el doble",
+        description: "Horas extra hasta que no haya discusión.",
+        effects: { overall: 1.3, goals: 1, fitness: -10 },
+      },
+      {
+        key: "partner_up", label: "Proponer al míster jugar los dos",
+        description: "Convertir al rival en socio.",
+        effects: { assists: 3, morale: 6, goals: -1 },
+      },
+      {
+        key: "ask_out", label: "Pedir salir cedido",
+        description: "Buscar minutos lejos antes que pelear.",
+        effects: { overall: 1, goals: 2, reputation: -7, morale: -5 },
+      },
+    ],
+  },
+  {
+    key: "boot_deal_switch",
+    title: "Otra marca te ofrece el doble por cambiar de botas",
+    description: "Llevas toda la carrera con las mismas y te has acostumbrado a ellas.",
+    weight: 6,
+    conditions: { minSeason: 3, minReputation: 45 },
+    choices: [
+      {
+        key: "switch_boots", label: "Aceptar el contrato",
+        description: "Más dinero, sensaciones distintas en el pie.",
+        effects: { reputation: 8, goals: -2, overall: -0.3 },
+      },
+      {
+        key: "renegotiate", label: "Usarlo para renegociar con la tuya",
+        description: "Enseñar la oferta a quien ya te viste.",
+        effects: { reputation: 5, morale: 4 },
+        failureEffects: { reputation: -6, morale: -7 },
+        risk: {
+          successChance: 0.5, modifier: "reputation",
+          successLabel: "Igualan la oferta y sigues cómodo.",
+          failureLabel: "Se lo toman a mal y no renuevan contigo.",
+        },
+      },
+      {
+        key: "keep_boots", label: "Quedarte donde estás",
+        description: "Lo que funciona no se toca.",
+        effects: { morale: 5, goals: 1, reputation: -2 },
+      },
+    ],
+  },
+  {
+    key: "winter_break_offer",
+    title: "Oferta en pleno mercado de invierno",
+    description: "Un rival directo pregunta por ti a mitad de temporada.",
+    weight: 8,
+    conditions: { minSeason: 3, minOverall: 74 },
+    choices: [
+      {
+        key: "move_now", label: "Irte en enero",
+        description: "Cambiar de aires con la temporada empezada.",
+        effects: { reputation: 7, overall: 0.6, morale: -6, goals: -2 },
+      },
+      {
+        key: "finish_season", label: "Terminar la temporada donde estás",
+        description: "Cumplir y decidir en verano.",
+        effects: { morale: 6, reputation: 4, fitness: -3 },
+      },
+      {
+        key: "raise_price", label: "Pedir que suban la oferta",
+        description: "Tensar la cuerda con el mercado abierto.",
+        effects: { reputation: 9, morale: 5 },
+        failureEffects: { reputation: -8, morale: -11 },
+        risk: {
+          successChance: 0.43, modifier: "reputation",
+          successLabel: "Pagan lo que pides y sales por la puerta grande.",
+          failureLabel: "Se retiran de la operación y te quedas señalado.",
+        },
+      },
+    ],
+  },
+  {
+    key: "youth_academy_visit",
+    title: "Vuelves al campo donde empezaste",
+    description: "Tu club de barrio te invita a una jornada con los chavales.",
+    weight: 6,
+    conditions: { minSeason: 4 },
+    choices: [
+      {
+        key: "go_all_day", label: "Pasar el día entero allí",
+        description: "Firmar, entrenar con ellos, quedarte hasta el final.",
+        effects: { reputation: 9, morale: 8, fitness: -5 },
+      },
+      {
+        key: "quick_visit", label: "Pasar un rato y volver",
+        description: "Cumplir sin descuidar la semana.",
+        effects: { reputation: 4, morale: 3 },
+      },
+      {
+        key: "send_kit", label: "Mandar material y excusarte",
+        description: "Ayudar sin aparecer.",
+        effects: { reputation: -2, fitness: 4, overall: 0.4 },
+      },
+    ],
+  },
+  {
+    key: "tactical_sacrifice",
+    title: "El míster te pide un trabajo sucio",
+    description: "Quiere que te vacíes marcando al creador rival en vez de atacar.",
+    weight: 9,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "accept_role", label: "Asumir el sacrificio",
+        description: "Nadie te lo contará en la ficha, pero el míster sí lo verá.",
+        effects: { overall: 0.8, reputation: 4, goals: -3, fitness: -8 },
+      },
+      {
+        key: "half_measure", label: "Hacerlo a medias y buscar tu juego",
+        description: "Intentar cumplir sin renunciar a atacar.",
+        effects: { goals: 1, assists: 1, morale: -3, overall: -0.2 },
+      },
+      {
+        key: "refuse_role", label: "Decirle que ese no es tu juego",
+        description: "Defender tu sitio en el campo.",
+        effects: { morale: 5, goals: 2 },
+        failureEffects: { morale: -12, reputation: -7, goals: -3 },
+        risk: {
+          successChance: 0.35, modifier: "reputation",
+          successLabel: "Te libera del encargo y se lo da a otro.",
+          failureLabel: "Te sienta el partido siguiente para dejar claro quién manda.",
+        },
+      },
+    ],
+  },
+  {
+    key: "social_media_storm",
+    title: "Un tuit tuyo de hace años reaparece",
+    description: "Lo escribiste con dieciséis. Lleva tres horas circulando.",
+    weight: 7,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "apologize", label: "Pedir perdón sin matices",
+        description: "Asumirlo y cerrar el tema hoy mismo.",
+        effects: { reputation: 4, morale: -6 },
+      },
+      {
+        key: "context", label: "Explicar el contexto",
+        description: "Defender que se ha sacado de quicio.",
+        effects: { morale: 6, reputation: 3 },
+        failureEffects: { reputation: -11, morale: -8 },
+        risk: {
+          successChance: 0.38,
+          successLabel: "La explicación convence y el tema muere.",
+          failureLabel: "Se lee como excusa y arde el doble.",
+        },
+      },
+      {
+        key: "delete_silent", label: "Borrarlo y no decir nada",
+        description: "Esperar a que pase.",
+        effects: { morale: -3, reputation: -4, overall: 0.4 },
+      },
+    ],
+  },
+  {
+    key: "champions_debut",
+    title: "Tu primera noche europea",
+    description: "Himno, estadio lleno y las piernas temblando en el túnel.",
+    weight: 8,
+    conditions: { minOverall: 74, tiers: ["elite", "grande"] },
+    choices: [
+      {
+        key: "enjoy", label: "Salir a disfrutarlo",
+        description: "Soltarse y jugar como sabes.",
+        effects: { goals: 2, morale: 9, reputation: 6, overall: 0.5, fitness: -6 },
+      },
+      {
+        key: "safe_debut", label: "Jugar seguro y no fallar",
+        description: "Ni una floritura hasta coger el pulso.",
+        effects: { overall: 0.6, morale: 3, goals: -1 },
+      },
+      {
+        key: "overplay", label: "Intentar la jugada de tu vida",
+        description: "Si sale, mañana hablan de ti en toda Europa.",
+        effects: { goals: 3, reputation: 14, morale: 10 },
+        failureEffects: { reputation: -7, morale: -12, overall: -0.5 },
+        risk: {
+          successChance: 0.36, modifier: "overall",
+          successLabel: "La metes por la escuadra en tu debut europeo.",
+          failureLabel: "Te comes la jugada y el míster te cambia al descanso.",
+        },
+      },
+    ],
+  },
+  {
+    key: "physio_warning",
+    title: "El fisio te avisa en privado",
+    description: "Dice que si sigues a este ritmo no llegas a los treinta.",
+    weight: 8,
+    conditions: { minSeason: 4, minAge: 25 },
+    choices: [
+      {
+        key: "listen", label: "Bajar la carga y alargar la carrera",
+        description: "Menos partidos ahora, más años después.",
+        effects: { fitness: 14, goals: -2, reputation: -4 },
+      },
+      {
+        key: "ignore_physio", label: "Seguir apretando",
+        description: "Ya habrá tiempo de cuidarse.",
+        effects: { goals: 2, reputation: 5, fitness: -12, overall: 0.3 },
+      },
+      {
+        key: "second_opinion", label: "Buscar otra opinión",
+        description: "Que lo mire alguien de fuera del club.",
+        effects: { fitness: 8, morale: 3, reputation: -2 },
+      },
+    ],
+  },
+  {
+    key: "national_snub",
+    title: "Te dejan fuera de la lista",
+    description: "Estabas en todas las quinielas y no apareces. Nadie te llama a explicártelo.",
+    weight: 8,
+    conditions: { minSeason: 3, minOverall: 76 },
+    choices: [
+      {
+        key: "public_anger", label: "Quejarte públicamente",
+        description: "Decir en voz alta lo que piensa medio país.",
+        effects: { reputation: 22, morale: 16, overall: 0.4 },
+        failureEffects: { reputation: -10, morale: -12 },
+        risk: {
+          successChance: 0.37, modifier: "reputation",
+          successLabel: "La prensa te da la razón y el seleccionador recula.",
+          failureLabel: "Te cierras la puerta de la selección durante años.",
+        },
+      },
+      {
+        key: "answer_pitch", label: "Responder con goles",
+        description: "Que la próxima lista no tenga discusión.",
+        effects: { goals: 3, overall: 0.7, fitness: -7, morale: -4 },
+      },
+      {
+        key: "call_coach_snub", label: "Llamarle en privado",
+        description: "Preguntar qué te falta, sin ruido.",
+        effects: { morale: 5, reputation: -3, overall: 0.4 },
+      },
+    ],
+  },
+  {
+    key: "veteran_advice",
+    title: "Un histórico del club te lleva a comer",
+    description: "Ganó todo aquí hace veinte años y quiere contarte algo.",
+    weight: 7,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "listen_legend", label: "Escuchar y aplicar lo que te dice",
+        description: "Cambiar cosas que llevas haciendo toda la vida.",
+        effects: { overall: 1.1, morale: 5, goals: -1 },
+      },
+      {
+        key: "polite", label: "Escuchar por educación",
+        description: "Agradecer sin cambiar nada.",
+        effects: { morale: 3, reputation: 2, overall: -0.3 },
+      },
+      {
+        key: "challenge_legend", label: "Discutirle su visión del fútbol",
+        description: "Defender tu forma de jugar delante de una leyenda.",
+        effects: { reputation: 7, morale: 4 },
+        failureEffects: { reputation: -8, morale: -6 },
+        risk: {
+          successChance: 0.4, modifier: "reputation",
+          successLabel: "Le convences y sale hablando maravillas de ti.",
+          failureLabel: "Lo cuenta en televisión y quedas de soberbio.",
+        },
+      },
+    ],
+  },
+  {
+    key: "stadium_farewell",
+    title: "Última jornada en el estadio que te hizo",
+    description: "Te vas en verano y la grada lo sabe. Noventa minutos por delante.",
+    weight: 6,
+    conditions: { minSeason: 5 },
+    choices: [
+      {
+        key: "emotional", label: "Salir a despedirte a lo grande",
+        description: "Dejarlo todo aunque el partido no valga nada.",
+        effects: { goals: 2, reputation: 9, morale: 10, fitness: -8 },
+      },
+      {
+        key: "professional", label: "Cumplir con profesionalidad",
+        description: "Sin dramas ni gestos.",
+        effects: { morale: 3, fitness: 3, reputation: 2 },
+      },
+      {
+        key: "ask_sub", label: "Pedir no jugar para no emocionarte",
+        description: "Evitar la despedida.",
+        effects: { fitness: 8, morale: -8, reputation: -5 },
+      },
+    ],
+  },
+  {
+    key: "wage_cut_request",
+    title: "El club pide bajarse el sueldo",
+    description: "Problemas económicos serios. Piden un esfuerzo a los que más cobran.",
+    weight: 7,
+    conditions: { minSeason: 4 },
+    choices: [
+      {
+        key: "accept_cut", label: "Aceptar la rebaja",
+        description: "Gesto que el vestuario y la grada no olvidan.",
+        effects: { reputation: 11, morale: 5 },
+      },
+      {
+        key: "refuse_cut", label: "Negarte: un contrato es un contrato",
+        description: "Defender lo tuyo aunque quede feo.",
+        effects: { morale: 6, reputation: -9 },
+      },
+      {
+        key: "defer", label: "Proponer aplazar el cobro",
+        description: "Ni renunciar ni bloquear.",
+        effects: { reputation: 2, morale: 7, overall: -0.2 },
+      },
+    ],
+  },
+  {
+    key: "biopic_offer",
+    title: "Quieren rodar una película sobre ti",
+    description: "Un estudio compra los derechos de tu historia. Rodaje durante la temporada.",
+    weight: 5,
+    conditions: { minReputation: 72, minSeason: 6 },
+    choices: [
+      {
+        key: "full_film", label: "Dar el sí y participar",
+        description: "Tu historia contada a lo grande, tu agenda reventada.",
+        effects: { reputation: 15, fitness: -10, overall: -0.5 },
+      },
+      {
+        key: "rights_only", label: "Vender los derechos y desentenderte",
+        description: "Que la hagan sin ti.",
+        effects: { reputation: 6, morale: 2 },
+      },
+      {
+        key: "no_film", label: "Decir que aún no toca",
+        description: "Las películas, al final de la carrera.",
+        effects: { overall: 0.7, fitness: 5, reputation: -3 },
+      },
+    ],
+  },
+  {
+    key: "derby_goal_celebration",
+    title: "Marcas en el campo de tu ex equipo",
+    description: "El gol que decide el derbi. Toda la grada rival te mira.",
+    weight: 8,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "celebrate_hard", label: "Celebrarlo delante de su grada",
+        description: "Sin disimulo.",
+        effects: { morale: 18, reputation: 12, goals: 1 },
+        failureEffects: { reputation: -11, morale: -5, fitness: -4 },
+        risk: {
+          successChance: 0.4,
+          successLabel: "Tu afición te lleva en volandas y no pasa nada más.",
+          failureLabel: "Amarilla, objetos desde la grada y expediente.",
+        },
+      },
+      {
+        key: "respect", label: "No celebrarlo por respeto",
+        description: "Levantar la mano y volver al centro del campo.",
+        effects: { reputation: 8, morale: -3 },
+      },
+      {
+        key: "point_teammates", label: "Señalar al compañero que asistió",
+        description: "Repartir el foco.",
+        effects: { assists: 1, morale: 6, reputation: 4 },
+      },
+    ],
+  },
+  {
+    key: "sleep_coach",
+    title: "El club contrata a un especialista del sueño",
+    description: "Quiere cambiarte los horarios enteros: cenas, pantallas, siestas.",
+    weight: 7,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "full_protocol", label: "Seguir el protocolo entero",
+        description: "Adiós a las noches como las conocías.",
+        effects: { fitness: 12, overall: 0.7, morale: -7 },
+      },
+      {
+        key: "partial_sleep", label: "Aplicar solo lo fácil",
+        description: "Lo que no te cambie la vida.",
+        effects: { fitness: 5, morale: 1 },
+      },
+      {
+        key: "skip_sleep", label: "Pasar del asunto",
+        description: "Ya duermes bien, dices.",
+        effects: { morale: 5, fitness: -7 },
+      },
+    ],
+  },
+  {
+    key: "teammate_transfer_plea",
+    title: "Tu mejor amigo del vestuario quiere irse",
+    description: "Te pide que hables con el club para que le dejen salir.",
+    weight: 7,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "help_friend", label: "Interceder por él",
+        description: "Gastar tu crédito con el club en un tercero.",
+        effects: { morale: 8, reputation: -5, assists: -1 },
+      },
+      {
+        key: "convince_stay", label: "Convencerle de que se quede",
+        description: "Pelear por mantener al grupo.",
+        effects: { assists: 2, morale: 5, reputation: 3 },
+        failureEffects: { morale: -9, assists: -2 },
+        risk: {
+          successChance: 0.47, modifier: "morale",
+          successLabel: "Se queda y firma su mejor temporada.",
+          failureLabel: "Se va igual y de mala manera.",
+        },
+      },
+      {
+        key: "stay_out_it", label: "No meterte",
+        description: "Es su carrera, no la tuya.",
+        effects: { overall: 0.5, morale: -4 },
+      },
+    ],
+  },
+  {
+    key: "false_positive",
+    title: "Un control antidopaje da un resultado raro",
+    description: "Un suplemento del propio club. Hay que aclararlo antes de que trascienda.",
+    weight: 6,
+    conditions: { minSeason: 4 },
+    choices: [
+      {
+        key: "fight_it", label: "Pelearlo con todo",
+        description: "Abogados, contraanálisis y semanas de tensión.",
+        effects: { reputation: 8, morale: 5 },
+        failureEffects: { reputation: -18, morale: -20, overall: -0.8 },
+        risk: {
+          successChance: 0.55, modifier: "reputation",
+          successLabel: "Se demuestra el error y sales limpio y reforzado.",
+          failureLabel: "El proceso se alarga y tu nombre queda manchado.",
+        },
+      },
+      {
+        key: "quiet_deal", label: "Aceptar una sanción corta y discreta",
+        description: "Cerrar rápido aunque no sea justo.",
+        effects: { morale: -8, reputation: -5, fitness: 6 },
+      },
+    ],
+  },
+  {
+    key: "manager_offer_future",
+    title: "El míster te ve de entrenador",
+    description: "Te propone empezar a trabajar con él en la pizarra durante la semana.",
+    weight: 6,
+    conditions: { minAge: 28, minSeason: 5 },
+    choices: [
+      {
+        key: "join_staff", label: "Meterte en la pizarra con él",
+        description: "Horas de vídeo que no dedicas a tu cuerpo.",
+        effects: { overall: 0.9, reputation: 6, fitness: -7 },
+      },
+      {
+        key: "later_coach", label: "Dejarlo para cuando cuelgues las botas",
+        description: "Ahora toca jugar.",
+        effects: { fitness: 5, goals: 1, reputation: -2 },
+      },
+    ],
+  },
+  {
+    key: "hometown_return",
+    title: "Tu primer club te quiere de vuelta",
+    description: "No pueden pagarte ni la mitad, pero te ofrecen volver a casa.",
+    weight: 7,
+    conditions: { minSeason: 6, minAge: 27 },
+    choices: [
+      {
+        key: "go_home", label: "Volver a casa",
+        description: "Cerrar el círculo aunque baje el nivel.",
+        effects: { morale: 14, reputation: 4, overall: -0.8 },
+      },
+      {
+        key: "promise_later", label: "Prometerles que volverás al final",
+        description: "Dejarlo por escrito para más adelante.",
+        effects: { morale: 6, reputation: 3 },
+      },
+      {
+        key: "decline_home", label: "Decir que no",
+        description: "La carrera está donde se compite.",
+        effects: { overall: 0.6, morale: -6, reputation: -2 },
+      },
+    ],
+  },
+  {
+    key: "kit_number_change",
+    title: "Te ofrecen cambiar de dorsal",
+    description: "Un fichaje quiere tu número y el club te compensa por cederlo.",
+    weight: 6,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "give_number", label: "Cedérselo",
+        description: "Un gesto que el vestuario nota.",
+        effects: { morale: 5, reputation: 4, goals: -1 },
+      },
+      {
+        key: "keep_it", label: "Quedártelo",
+        description: "Es tu número desde que llegaste.",
+        effects: { morale: 6, reputation: -4 },
+      },
+      {
+        key: "sell_number", label: "Cedérselo a cambio de dinero",
+        description: "Negociar el gesto.",
+        effects: { reputation: -7, morale: 8 },
+      },
+    ],
+  },
+  {
+    key: "winter_camp",
+    title: "Gira de pretemporada al otro lado del mundo",
+    description: "Diez días de vuelos y partidos amistosos con jet lag.",
+    weight: 8,
+    choices: [
+      {
+        key: "full_tour", label: "Hacer la gira entera",
+        description: "Cumplir con el club y con los patrocinadores.",
+        effects: { reputation: 6, fitness: -11, morale: -3 },
+      },
+      {
+        key: "ask_rest", label: "Pedir quedarte a entrenar",
+        description: "Preparar la temporada en casa.",
+        effects: { fitness: 10, overall: 0.6, reputation: -6 },
+      },
+      {
+        key: "half_tour", label: "Ir solo a los partidos importantes",
+        description: "Compromiso a medias.",
+        effects: { fitness: 2, reputation: 1, morale: 2 },
+      },
+    ],
+  },
+  {
+    key: "rival_provocation_press",
+    title: "Una estrella rival te menosprecia en prensa",
+    description: "Dice que en su liga no serías titular. Se ha hecho viral.",
+    weight: 8,
+    conditions: { minReputation: 45 },
+    choices: [
+      {
+        key: "answer_press", label: "Contestarle con la misma moneda",
+        description: "Guerra abierta de titulares.",
+        effects: { reputation: 18, morale: 15, goals: 1 },
+        failureEffects: { reputation: -9, morale: -8, goals: -2 },
+        risk: {
+          successChance: 0.44, modifier: "reputation",
+          successLabel: "Tu respuesta se hace más viral que su ataque.",
+          failureLabel: "Le das alas y la broma se vuelve contra ti.",
+        },
+      },
+      {
+        key: "answer_pitch_rival", label: "Guardártelo para el partido",
+        description: "Ni una palabra hasta que os crucéis.",
+        effects: { goals: 2, overall: 0.6, morale: -3 },
+      },
+      {
+        key: "praise_him", label: "Elogiarle públicamente",
+        description: "Desactivarlo con elegancia.",
+        effects: { reputation: 6, morale: -2, goals: -1 },
+      },
+    ],
+  },
+  {
+    key: "long_term_injury_return",
+    title: "Vuelves tras la lesión más larga de tu carrera",
+    description: "Ocho meses fuera. El primer entrenamiento con el grupo es hoy.",
+    weight: 8,
+    conditions: { minSeason: 3, maxFitness: 85 },
+    choices: [
+      {
+        key: "test_it", label: "Ponerlo a prueba desde el minuto uno",
+        description: "Saber ya si la rodilla aguanta.",
+        effects: { fitness: 6, overall: 0.8, morale: 7 },
+        failureEffects: { fitness: -18, morale: -14, overall: -0.6 },
+        risk: {
+          successChance: 0.45, modifier: "fitness",
+          successLabel: "Aguanta todo y vuelves con confianza total.",
+          failureLabel: "Notas un pinchazo y vuelves a la camilla.",
+        },
+      },
+      {
+        key: "gradual", label: "Volver poco a poco",
+        description: "Semanas de carga progresiva.",
+        effects: { fitness: 13, goals: -2, reputation: -3 },
+      },
+      {
+        key: "mental_work", label: "Trabajar primero la cabeza",
+        description: "El miedo a recaer pesa más que la rodilla.",
+        effects: { morale: 11, fitness: 5, goals: -1 },
+      },
+    ],
+  },
+  {
+    key: "club_takeover",
+    title: "Compran el club",
+    description: "Dueños nuevos, dinero nuevo y ganas de limpiar la plantilla.",
+    weight: 8,
+    conditions: { minSeason: 3 },
+    choices: [
+      {
+        key: "win_them", label: "Ganarte a los nuevos dueños",
+        description: "Reuniones, actos, buena cara.",
+        effects: { reputation: 8, morale: 3, fitness: -4 },
+      },
+      {
+        key: "stay_pro_takeover", label: "Ignorar el ruido y entrenar",
+        description: "Que hable el campo.",
+        effects: { overall: 0.8, goals: 1, reputation: -3 },
+      },
+      {
+        key: "ask_guarantees", label: "Pedir garantías por escrito",
+        description: "Saber si cuentan contigo antes de comprometerte.",
+        effects: { morale: 7, reputation: 4 },
+        failureEffects: { morale: -12, reputation: -7 },
+        risk: {
+          successChance: 0.42, modifier: "reputation",
+          successLabel: "Te confirman como pieza del proyecto.",
+          failureLabel: "Te incluyen en la lista de transferibles.",
+        },
+      },
+    ],
+  },
+  {
+    key: "charity_match",
+    title: "Partido benéfico en fecha FIFA",
+    description: "Organizado por un compañero para recaudar fondos. Es tu semana de descanso.",
+    weight: 7,
+    conditions: { minSeason: 2 },
+    choices: [
+      {
+        key: "play_charity", label: "Jugarlo",
+        description: "Noventa minutos más en las piernas.",
+        effects: { reputation: 7, morale: 6, fitness: -8 },
+      },
+      {
+        key: "attend_only", label: "Ir pero no jugar",
+        description: "Estar sin desgastarte.",
+        effects: { reputation: 4, morale: 3, fitness: -1 },
+      },
+      {
+        key: "donate", label: "Donar y quedarte descansando",
+        description: "Ayudar sin aparecer.",
+        effects: { fitness: 7, reputation: -1, morale: 1 },
+      },
+    ],
+  },
+  {
+    key: "last_dance",
+    title: "Anuncias que esta es tu última temporada",
+    description: "Lo has decidido. Falta contarlo y decidir cómo.",
+    weight: 7,
+    conditions: { minAge: 34 },
+    choices: [
+      {
+        key: "announce_now", label: "Anunciarlo al empezar",
+        description: "Toda la temporada como una despedida.",
+        effects: { reputation: 10, morale: 8, fitness: -5 },
+      },
+      {
+        key: "announce_end", label: "Guardarlo hasta el final",
+        description: "Que nadie juegue contigo pensando en la despedida.",
+        effects: { overall: 0.6, goals: 1, morale: -4 },
+      },
+      {
+        key: "keep_going", label: "Replantearte y seguir un año más",
+        description: "El cuerpo todavía responde.",
+        effects: { morale: 6, fitness: -9, reputation: 3, overall: 0.6, goals: 1 },
+      },
+    ],
+  },
+];
+
 export const EVENT_TEMPLATES: EventTemplate[] = [
   ...EARLY, ...COACHING, ...LOCKER, ...MEDIA, ...PHYSICAL,
   ...MARKET, ...COMPETITION, ...NATIONAL, ...STAR, ...VETERAN, ...PERSONAL,
+  ...EXTRA,
 ];
 
 /* ================================================================== */
@@ -1411,8 +2235,15 @@ function buildMessage(
   return `${t.title} · ${c.label}. ${tone}`;
 }
 
-/** Cuántas claves recientes se recuerdan para evitar repeticiones. */
-export const EVENT_MEMORY = 24;
+/**
+ * Cuántos eventos vividos se recuerdan para no repetirlos.
+ *
+ * Más que el catálogo entero, a propósito: así un evento no vuelve hasta que
+ * se han agotado todos los que encajan con tu momento de carrera. Con memoria
+ * de 24 (unas cinco temporadas) los eventos sin condiciones reaparecían tres o
+ * cuatro veces por carrera, que es justo lo que se sentía repetitivo.
+ */
+export const EVENT_MEMORY = 120;
 
 /**
  * Opción por defecto cuando el jugador cierra la temporada dejando decisiones

@@ -20,12 +20,17 @@ interface Props {
   onResolve: (choiceKey: string) => AppliedEventOutcome;
   /** Cierra el evento y pasa al siguiente. */
   onContinue: (outcome: AppliedEventOutcome) => void;
+  /**
+   * Aparca la decisión para consultar el panel. La decisión no se pierde:
+   * vuelve a estar disponible desde el botón «Retomar decisiones».
+   */
+  onDismiss: () => void;
   /** Posición dentro de la tanda de la temporada, para el progreso. */
   index: number;
   total: number;
 }
 
-export function EventChoiceDialog({ event, state, onResolve, onContinue, index, total }: Props) {
+export function EventChoiceDialog({ event, state, onResolve, onContinue, onDismiss, index, total }: Props) {
   const [phase, setPhase] = useState<Phase>("choosing");
   const [outcome, setOutcome] = useState<AppliedEventOutcome | null>(null);
   const [chosen, setChosen] = useState<EventChoice | null>(null);
@@ -44,9 +49,18 @@ export function EventChoiceDialog({ event, state, onResolve, onContinue, index, 
     setPhase(result.roll ? "rolling" : "result");
   }
 
+  // Cerrar solo tiene sentido antes de decidir: una vez resuelto el evento el
+  // estado ya cambió y hay que ver el resultado.
+  const dismissible = phase === "choosing";
+
   return (
-    <Dialog open>
-      <DialogContent className="max-w-xl">
+    <Dialog open onOpenChange={o => { if (!o && dismissible) onDismiss(); }}>
+      <DialogContent
+        className="max-w-xl"
+        hideClose={!dismissible}
+        onEscapeKeyDown={e => { if (!dismissible) e.preventDefault(); }}
+        onPointerDownOutside={e => { if (!dismissible) e.preventDefault(); }}
+      >
         <DialogHeader>
           <div className="mb-1 flex items-center justify-between gap-3">
             <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -138,6 +152,8 @@ function ChoiceList({
         Ninguna opción es gratis: todas dan algo y quitan algo. Las marcadas
         como <span className="font-bold text-accent">apuesta</span> pasan además
         por un sorteo que tu media, reputación, moral o forma inclinan.
+        <br />
+        Puedes cerrar y consultar tus estadísticas: la decisión te espera.
       </p>
     </>
   );
