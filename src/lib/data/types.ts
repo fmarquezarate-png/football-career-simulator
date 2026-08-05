@@ -17,6 +17,14 @@ export const POSITION_LABEL: Record<Position, string> = {
 
 export type Difficulty = "easy" | "normal" | "hard" | "legendary";
 
+export type PreferredFoot = "left" | "right" | "both";
+
+export const FOOT_LABEL: Record<PreferredFoot, string> = {
+  left: "Zurdo",
+  right: "Diestro",
+  both: "Ambidiestro",
+};
+
 export interface Attributes {
   pace: number;
   shooting: number;
@@ -47,13 +55,10 @@ export interface LeagueIndexEntry {
   country: string;
   countryCode: string;
   confederation: string;
-  tier: number;
+  /** Nivel medio de la liga (0-100). Gobierna el salto entre competiciones. */
+  strength: number;
   teams: number;
   rounds: number;
-  reputation: number;
-  prestige: number;
-  domesticCup: { id: string; name: string };
-  continentalCup: string;
 }
 
 export interface League {
@@ -61,6 +66,8 @@ export interface League {
   name: string;
   country: string;
   countryCode: string;
+  confederation: string;
+  strength: number;
   season: string;
   rounds: number;
   teams: Team[];
@@ -90,6 +97,28 @@ export interface CareerSeasonStats {
   nationalTeamApps?: number;
   nationalTeamGoals?: number;
   worldCupParticipated?: string;
+  /** Edad y media al cerrar la temporada, para la línea temporal de carrera. */
+  age?: number;
+  overallAfter?: number;
+  /** Qué atributos se movieron y por qué. */
+  attributeChanges?: { key: string; delta: number; reason: string }[];
+  /** Por qué salieron estos goles y asistencias. Ver `playerPerformance.ts`. */
+  breakdown?: {
+    expectedGoals: number;
+    expectedAssists: number;
+    leagueRounds: number;
+    startingProb: number;
+    luckGoals: number;
+    luckAssists: number;
+    ratingBase: number;
+    factors: {
+      key: string; label: string; detail: string;
+      multiplier: number; goalsDelta: number; assistsDelta: number;
+    }[];
+  };
+  /** Goles y asistencias sumados por decisiones de la temporada. */
+  eventGoals?: number;
+  eventAssists?: number;
 }
 
 export interface Contract {
@@ -102,12 +131,66 @@ export interface Contract {
   releaseClause?: number;
 }
 
+export type EffectMetric =
+  | "goals" | "assists" | "morale" | "reputation" | "overall" | "fitness";
+
+/**
+ * Efectos de una elección, expresados como la media (mu) de cada métrica en
+ * sus propias unidades. El motor muestrea cada una de una normal, así que dos
+ * jugadores con la misma decisión no obtienen lo mismo.
+ *
+ * La clave del diseño: casi ninguna opción es solo positiva. Una opción que
+ * sube la media suele costar forma física o moral, y una que dispara la
+ * reputación puede resentir el juego colectivo. No hay respuesta correcta.
+ */
+export type ChoiceEffects = Partial<Record<EffectMetric, number>>;
+
+/**
+ * Apuesta: la opción se juega a un sorteo antes de aplicar nada. Si sale bien
+ * se aplican los `effects` de la elección; si sale mal, sus `failureEffects`.
+ */
+export interface ChoiceRisk {
+  /** Probabilidad base de éxito, 0-1. */
+  successChance: number;
+  successLabel: string;
+  failureLabel: string;
+  /** Atributo del jugador que inclina la balanza, si aplica. */
+  modifier?: "overall" | "reputation" | "morale" | "fitness";
+}
+
 export interface EventChoice {
   key: string;
   label: string;
+  /** Contexto narrativo. No debe adelantar el resultado mecánico. */
   description: string;
-  qualityBias: number;
-  outcomeSummary: string;
+  effects: ChoiceEffects;
+  /** Solo para apuestas: qué pasa si el sorteo sale mal. */
+  failureEffects?: ChoiceEffects;
+  risk?: ChoiceRisk;
+}
+
+/**
+ * Filtros de aparición. Cuantos más eventos condicionados haya, menos se
+ * repite el repertorio entre temporadas: un canterano de 18 años y una
+ * estrella de 31 ven catálogos casi disjuntos.
+ */
+export interface EventConditions {
+  minSeason?: number;
+  maxSeason?: number;
+  minAge?: number;
+  maxAge?: number;
+  positions?: Position[];
+  minOverall?: number;
+  maxOverall?: number;
+  minReputation?: number;
+  maxReputation?: number;
+  minMorale?: number;
+  maxMorale?: number;
+  maxFitness?: number;
+  /** Franja del club actual. */
+  tiers?: ("elite" | "grande" | "media" | "modesto")[];
+  /** Requiere haber ganado algo. */
+  minTrophies?: number;
 }
 
 export interface EventTemplate {
@@ -115,8 +198,18 @@ export interface EventTemplate {
   title: string;
   description: string;
   weight: number;
-  conditions?: { minSeason?: number; positions?: Position[]; minOverall?: number; maxOverall?: number };
+  conditions?: EventConditions;
   choices: EventChoice[];
+}
+
+/** Resultado del sorteo de una elección arriesgada, para poder animarlo. */
+export interface RollResult {
+  /** Probabilidad efectiva de éxito ya ajustada por los atributos, 0-1. */
+  successChance: number;
+  /** Valor sorteado, 0-1. Éxito si es menor que `successChance`. */
+  rolled: number;
+  success: boolean;
+  label: string;
 }
 
 export interface AppliedEventOutcome {
@@ -130,6 +223,7 @@ export interface AppliedEventOutcome {
   overallDelta: number;
   fitnessDelta: number;
   message: string;
+  roll?: RollResult;
 }
 
 export interface GeneratedPlayer {
@@ -146,10 +240,13 @@ export interface CareerState {
   playerName: string;
   nationality: string;
   position: Position;
+  preferredFoot: PreferredFoot;
   difficulty: Difficulty;
   currentTeamId: string;
   currentTeamName: string;
   currentLeagueId: string;
+  /** Franja del club sorteado al debutar (solo informativo). */
+  startingTier?: "elite" | "grande" | "media" | "modesto";
   age: number;
   overall: number;
   potential: number;
@@ -168,4 +265,11 @@ export interface CareerState {
   awards: string[];
   trophies: string[];
   currentSeasonEventsRemaining: number;
+  /**
+   * Claves de los últimos eventos vividos, para no repetirlos temporada tras
+   * temporada. Se poda a los ~24 más recientes.
+   */
+  recentEventKeys?: string[];
+  /** Última temporada en la que ya se jugó el penalti decisivo. */
+  penaltyTakenSeason?: number;
 }

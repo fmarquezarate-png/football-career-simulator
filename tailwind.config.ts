@@ -19,7 +19,7 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        gold: "hsl(45 93% 58%)",
+        gold: "hsl(45 100% 62%)",
         pitch: "hsl(142 71% 45%)",
       },
       borderRadius: {

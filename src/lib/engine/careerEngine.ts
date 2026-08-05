@@ -1,51 +1,71 @@
 import type {
   AppliedEventOutcome, CareerSeasonStats, CareerState, Difficulty, EventTemplate,
-  Position,
+  Position, PreferredFoot,
 } from "../data/types";
-import { getLeague, getAllLeagues } from "../data/loader";
-import { makeRng, clamp, type Rng } from "./rng";
+import { getLeague, getAllLeagues, getTeam, findTeamByName } from "../data/loader";
+import { DIFFICULTY_PROFILES } from "../data/difficulty";
+import { assignStartingClub, leagueStrength, type ClubTier } from "./clubAssignment";
+import { makeRng, clamp, normal, type Rng } from "./rng";
+import { round1 } from "../utils";
+import { penaltyOutcomeEffects, type PenaltyContext, type PenaltyResult } from "./penalty";
+import {
+  applyOverallDeltaToAttributes, capToPotential, evolveAttributes,
+  initialAttributes, overallFromAttributes,
+} from "./attributes";
 import { simulatePlayerSeason } from "./playerPerformance";
-import { applyChoice, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
+import { applyChoice, EVENT_MEMORY, EVENT_TEMPLATES, pickSeasonEvents } from "./events";
 import { computeAwards } from "./awards";
 import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
 
-const START_OVERALL: Record<Difficulty, number> = { easy: 72, normal: 65, hard: 58, legendary: 52 };
-const EVENTS_PER_SEASON = 10;
+/**
+ * Decisiones por temporada. Cinco mantiene el ritmo: suficientes para que la
+ * temporada tenga forma, pocas como para que cada una pese.
+ */
+export const EVENTS_PER_SEASON = 5;
 
 export interface NewCareerParams {
   playerName: string;
   nationality: string;
   position: Position;
+  preferredFoot: PreferredFoot;
   difficulty: Difficulty;
-  teamId: string;
   seed?: string;
 }
 
+/**
+ * Crea la carrera. El club de debut **no se elige**: se sortea a partir de la
+ * distribución de franjas de la dificultad (ver `clubAssignment.ts`).
+ */
 export function newCareer(params: NewCareerParams): CareerState {
   const rng = makeRng(params.seed ?? `${params.playerName}-${Date.now()}`);
-  const league = findLeagueForTeam(params.teamId);
-  if (!league) throw new Error(`Equipo desconocido: ${params.teamId}`);
-  const team = league.teams.find(t => t.id === params.teamId)!;
-  const startOverall = clamp(START_OVERALL[params.difficulty] + Math.floor(rng() * 6), 45, 85);
+  const profile = DIFFICULTY_PROFILES[params.difficulty];
+  const { team, league, tier } = assignStartingClub(rng, params.difficulty, params.nationality);
+  const targetOverall = clamp(profile.startOverall + Math.floor(rng() * 6), 45, 85);
+  // El OVR sale de los atributos, no al revés: así cualquier cambio posterior
+  // en un atributo se refleja en la media.
+  const attributes = initialAttributes(params.position, targetOverall, rng, params.preferredFoot);
+  const startOverall = overallFromAttributes(attributes, params.position);
   return {
     playerName: params.playerName,
     nationality: params.nationality,
     position: params.position,
+    preferredFoot: params.preferredFoot,
     difficulty: params.difficulty,
     currentTeamId: team.id,
     currentTeamName: team.name,
     currentLeagueId: league.id,
+    startingTier: tier,
     age: 18,
     overall: startOverall,
-    potential: clamp(startOverall + 10 + Math.floor(rng() * 15), 65, 95),
+    potential: clamp(startOverall + 10 + profile.potentialBonus + Math.floor(rng() * 15), 62, 95),
     reputation: 20,
     morale: 80,
     fitness: 100,
     seasonNumber: 1,
     week: 1,
     isRetired: false,
-    attributes: defaultAttributes(params.position),
+    attributes,
     totals: { goals: 0, assists: 0, apps: 0, motm: 0 },
     seasonStats: { goals: 0, assists: 0, apps: 0, motm: 0 },
     history: [],
@@ -61,22 +81,57 @@ export function newCareer(params: NewCareerParams): CareerState {
   };
 }
 
-function defaultAttributes(pos: Position) {
-  const base = { pace: 60, shooting: 60, passing: 60, dribbling: 60, defending: 60, physical: 60 };
-  if (pos === "GK") return { ...base, defending: 70, pace: 45 };
-  if (["CB", "LB", "RB"].includes(pos)) return { ...base, defending: 72, physical: 68 };
-  if (["CDM", "CM"].includes(pos)) return { ...base, passing: 70, defending: 65 };
-  if (pos === "CAM") return { ...base, passing: 72, dribbling: 70, shooting: 68 };
-  if (["LW", "RW"].includes(pos)) return { ...base, pace: 75, dribbling: 72, shooting: 68 };
-  if (pos === "ST") return { ...base, shooting: 74, pace: 70, physical: 68 };
-  return base;
+/**
+ * Recupera una carrera guardada con un catálogo de ligas anterior.
+ *
+ * Al pasar de 5 a 33 ligas los identificadores de equipo cambiaron, así que
+ * una partida vieja apunta a clubes que ya no existen y el panel reventaría al
+ * no encontrarlos. Se reasigna por nombre y, si tampoco cuadra, al club más
+ * parecido en nivel dentro de la liga del jugador.
+ */
+function sanitizeNumbers(state: CareerState): CareerState {
+  return {
+    ...state,
+    overall: Math.round(state.overall),
+    potential: Math.round(state.potential),
+    morale: Math.round(state.morale),
+    reputation: Math.round(state.reputation),
+    fitness: Math.round(state.fitness),
+  };
 }
 
-function findLeagueForTeam(teamId: string) {
-  for (const league of getAllLeagues()) {
-    if (league.teams.some(t => t.id === teamId)) return league;
+export function migrateCareer(state: CareerState): CareerState {
+  const needsRounding = [state.overall, state.morale, state.reputation, state.fitness]
+    .some(v => !Number.isInteger(v));
+  if (getTeam(state.currentTeamId)) {
+    return needsRounding ? sanitizeNumbers(state) : state;
   }
-  return null;
+
+  const byName = findTeamByName(state.currentTeamName);
+  const target = byName ?? (() => {
+    const league = getLeague(state.currentLeagueId) ?? getAllLeagues()[0];
+    const team = [...league.teams].sort(
+      (a, b) => Math.abs(a.overall - state.overall) - Math.abs(b.overall - state.overall),
+    )[0];
+    return { league, team };
+  })();
+
+  return {
+    ...sanitizeNumbers(state),
+    currentTeamId: target.team.id,
+    currentTeamName: target.team.name,
+    currentLeagueId: target.league.id,
+    // El histórico conserva los nombres; solo se reapuntan los identificadores
+    // para que los escudos vuelvan a resolverse.
+    history: state.history.map(h => ({
+      ...h,
+      teamId: findTeamByName(h.teamName)?.team.id ?? target.team.id,
+    })),
+    contracts: state.contracts.map(c => ({
+      ...c,
+      teamId: findTeamByName(c.teamName)?.team.id ?? c.teamId,
+    })),
+  };
 }
 
 /** Devuelve los eventos del bloque actual (o siguientes 3 hasta que el usuario los cierre). */
@@ -92,23 +147,90 @@ export function resolveEvent(
   const choice = template.choices.find(c => c.key === choiceKey);
   if (!choice) throw new Error(`Choice desconocida: ${choiceKey}`);
   const rng = makeRng(`choice-${state.playerName}-${state.seasonNumber}-${template.key}-${choiceKey}-${Date.now()}`);
-  const outcome = applyChoice(rng, template, choice, state);
+  const raw = applyChoice(rng, template, choice, state);
+  // La dificultad amplifica el lado malo de cada decisión, no el bueno.
+  const outcome = amplifyDownside(raw, DIFFICULTY_PROFILES[state.difficulty].eventVariance);
+
+  // El cambio de media no se aplica al OVR directamente: se reparte entre los
+  // atributos y el OVR se recalcula desde ellos.
+  const attributes = capToPotential(
+    applyOverallDeltaToAttributes(state.attributes, state.position, outcome.overallDelta, rng),
+    state.position,
+    Math.min(99, state.potential + 3),
+  );
 
   const newState: CareerState = {
     ...state,
-    overall: clamp(state.overall + outcome.overallDelta, 45, Math.min(99, state.potential + 3)),
-    morale: clamp(state.morale + outcome.moraleDelta, 0, 100),
-    reputation: clamp(state.reputation + outcome.reputationDelta, 0, 100),
-    fitness: clamp(state.fitness + outcome.fitnessDelta, 20, 100),
+    attributes,
+    overall: Math.round(clamp(overallFromAttributes(attributes, state.position), 45, Math.min(99, state.potential + 3))),
+    morale: Math.round(clamp(state.morale + outcome.moraleDelta, 0, 100)),
+    reputation: Math.round(clamp(state.reputation + outcome.reputationDelta, 0, 100)),
+    fitness: Math.round(clamp(state.fitness + outcome.fitnessDelta, 20, 100)),
     seasonStats: {
       ...state.seasonStats,
       goals: Math.max(0, state.seasonStats.goals + outcome.goalsBoost),
       assists: Math.max(0, state.seasonStats.assists + outcome.assistsBoost),
     },
     events: [...state.events, outcome],
+    // Memoria de eventos: evita que el mismo repertorio se repita cada
+    // temporada. Se conserva entre temporadas, no se reinicia con ellas.
+    recentEventKeys: [...(state.recentEventKeys ?? []), template.key].slice(-EVENT_MEMORY),
     currentSeasonEventsRemaining: Math.max(0, state.currentSeasonEventsRemaining - 1),
   };
   return { state: newState, outcome };
+}
+
+/**
+ * Escala solo los deltas negativos por el factor de varianza de la dificultad.
+ *
+ * Redondea siempre: moral, reputación y forma son enteros (0-100) y la media
+ * lleva como mucho un decimal. Sin esto, multiplicar por 1,25 dejaba moral
+ * 62,5 y medias con cola decimal infinita paseándose por toda la interfaz.
+ */
+function amplifyDownside(o: AppliedEventOutcome, variance: number): AppliedEventOutcome {
+  if (variance === 1) return o;
+  const down = (v: number) => (v < 0 ? v * variance : v);
+  return {
+    ...o,
+    goalsBoost: Math.round(down(o.goalsBoost)),
+    assistsBoost: Math.round(down(o.assistsBoost)),
+    moraleDelta: Math.round(down(o.moraleDelta)),
+    reputationDelta: Math.round(down(o.reputationDelta)),
+    overallDelta: round1(down(o.overallDelta)),
+    fitnessDelta: Math.round(down(o.fitnessDelta)),
+  };
+}
+
+/**
+ * ¿Toca penalti decisivo esta temporada?
+ *
+ * Es un momento excepcional, no un evento de cada año: hace falta jugar en un
+ * club con opciones y tener peso en el equipo. Cuando ocurre, el escenario se
+ * elige según lo lejos que llegue tu club.
+ */
+export function penaltyChance(state: CareerState): PenaltyContext | null {
+  if (state.position === "GK") return null;
+  const team = getTeam(state.currentTeamId);
+  if (!team) return null;
+
+  const rng = makeRng(`penalty-${state.playerName}-${state.seasonNumber}`);
+  const strength = leagueStrength(state.currentLeagueId);
+  const tier = team.team.overall;
+
+  // Cuanto mejor el club y más peso tengas, más probable llegar a una final.
+  const base = clamp((tier - 62) / 120 + (state.reputation - 40) / 400, 0.02, 0.3);
+  if (rng() > base) return null;
+
+  const european = strength >= 70 && tier >= 76;
+  const competition = european
+    ? (rng() < 0.5 ? "Final de la UEFA Champions League" : "Final de la Copa nacional")
+    : "Final de la Copa nacional";
+
+  return {
+    competition,
+    stakes: "Tanda de penaltis, empate a todo. Te toca a ti. Sesenta mil personas conteniendo la respiración.",
+    keeper: Math.round(clamp(normal(rng, tier + 4, 5), 60, 92)),
+  };
 }
 
 export interface EndSeasonResult {
@@ -147,6 +269,9 @@ export function endSeason(state: CareerState): EndSeasonResult {
     teamLeagueFinish: perf.teamLeagueFinish,
     apps: perf.apps, goals: finalGoals, assists: finalAssists, motm: finalMotm,
     avgRating: perf.avgRating, trophies: [], individualAwards: [],
+    breakdown: perf.breakdown,
+    eventGoals: state.seasonStats.goals,
+    eventAssists: state.seasonStats.assists,
   };
 
   const awards = computeAwards(rng, {
@@ -158,19 +283,27 @@ export function endSeason(state: CareerState): EndSeasonResult {
   const nt = simulateNationalTeam(rng, state);
   Object.assign(seasonStats, nt);
 
-  // Progresión
+  // Progresión: los atributos se mueven según lo que ha pasado en el campo.
   const newAge = state.age + 1;
-  const growth = newAge <= 24 ? 2 + Math.floor(rng() * 3) : newAge <= 28 ? Math.floor(rng() * 2) : newAge <= 31 ? 0 : -1 - Math.floor(rng() * 2);
-  const newOverall = clamp(state.overall + growth + Math.max(0, seasonStats.avgRating - 7) * 0.5, 45, state.potential);
+  const evolved = evolveAttributes(
+    state.attributes, state.position, seasonStats, newAge, state.potential, rng,
+  );
+  seasonStats.age = state.age;
+  seasonStats.overallAfter = overallFromAttributes(evolved.attributes, state.position);
+  seasonStats.attributeChanges = evolved.changes;
+  // La media sale íntegramente de los atributos: no hay un segundo cálculo de
+  // progresión por edad que pudiera contradecirlos.
+  const newOverall = seasonStats.overallAfter!;
 
   const newState: CareerState = {
     ...state,
     seasonNumber: state.seasonNumber + 1,
     week: 1,
     age: newAge,
+    attributes: evolved.attributes,
     overall: Math.round(newOverall),
-    reputation: clamp(state.reputation + seasonStats.trophies.length * 3 + seasonStats.individualAwards.length * 6 + Math.max(0, seasonStats.avgRating - 7) * 4, 0, 100),
-    morale: clamp(60 + seasonStats.avgRating * 4, 0, 100),
+    reputation: Math.round(clamp(state.reputation + seasonStats.trophies.length * 3 + seasonStats.individualAwards.length * 6 + Math.max(0, seasonStats.avgRating - 7) * 4, 0, 100)),
+    morale: Math.round(clamp(60 + seasonStats.avgRating * 4, 0, 100)),
     fitness: 100,
     seasonStats: { goals: 0, assists: 0, apps: 0, motm: 0 },
     totals: {
@@ -189,6 +322,18 @@ export function endSeason(state: CareerState): EndSeasonResult {
 
   const offers = generateOffers(rng, newState);
   return { state: newState, season: seasonStats, offers };
+}
+
+/** Traslada el desenlace del penalti decisivo al estado de la carrera. */
+export function applyPenalty(state: CareerState, result: PenaltyResult): CareerState {
+  const e = penaltyOutcomeEffects(result);
+  return {
+    ...state,
+    seasonStats: { ...state.seasonStats, goals: state.seasonStats.goals + (e.goals ?? 0) },
+    reputation: clamp(state.reputation + (e.reputation ?? 0), 0, 100),
+    morale: clamp(state.morale + (e.morale ?? 0), 0, 100),
+    penaltyTakenSeason: state.seasonNumber,
+  };
 }
 
 /** Aceptar oferta => actualizar contrato y equipo. */

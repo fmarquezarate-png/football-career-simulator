@@ -1,3 +1,4 @@
+import { fmt } from "@/lib/utils";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -103,7 +104,7 @@ export default async function ShareCareerPage({ params }: { params: Promise<{ sl
                     <td className="text-center font-semibold">{s.goals}</td>
                     <td className="text-center">{s.assists}</td>
                     <td className="text-center">{s.motm}</td>
-                    <td className="text-center">{s.avgRating}</td>
+                    <td className="text-center">{fmt(s.avgRating)}</td>
                     <td className="text-xs">{[...s.trophies, ...s.individualAwards].join(", ") || "—"}</td>
                     <td className="text-xs">{s.worldCupParticipated ?? "—"}</td>
                   </tr>

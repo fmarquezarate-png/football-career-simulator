@@ -5,9 +5,18 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Football Career Simulator",
+  title: {
+    default: "Football Career Simulator",
+    template: "%s · Football Career Simulator",
+  },
   description:
-    "El simulador de carrera de fútbol más completo: elige tu club, toma decisiones, gana Balones de Oro y compárate con tus amigos.",
+    "Crea tu futbolista, toma las decisiones que definen una carrera y llega de canterano a leyenda mundial. Goles, títulos y Balones de Oro simulados con probabilidad real.",
+  applicationName: "Football Career Simulator",
+  openGraph: {
+    title: "Football Career Simulator",
+    description: "De canterano a leyenda mundial. Simulador de carrera futbolística.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

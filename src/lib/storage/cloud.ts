@@ -1,10 +1,10 @@
 "use client";
 import type { CareerState } from "../data/types";
-import { createSupabaseBrowserClient } from "../supabase/client";
+import { requireSupabaseBrowserClient } from "../supabase/client";
 
 /** Persiste la carrera del usuario logueado. Insert-or-update por id. */
 export async function saveCloudCareer(state: CareerState, userId: string): Promise<CareerState> {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = requireSupabaseBrowserClient();
   const payload = {
     id: state.id,
     user_id: userId,
@@ -39,7 +39,7 @@ export async function saveCloudCareer(state: CareerState, userId: string): Promi
 }
 
 export async function togglePublic(careerId: string, isPublic: boolean): Promise<string> {
-  const supabase = createSupabaseBrowserClient();
+  const supabase = requireSupabaseBrowserClient();
   const { data, error } = await supabase
     .from("careers")
     .update({ is_public: isPublic })
@@ -50,11 +50,38 @@ export async function togglePublic(careerId: string, isPublic: boolean): Promise
   return data.share_slug as string;
 }
 
-export async function listMyCareers() {
-  const supabase = createSupabaseBrowserClient();
-  const { data, error } = await supabase.from("careers").select("*").order("updated_at", { ascending: false });
+export interface CloudCareerRow {
+  id: string;
+  share_slug: string | null;
+  is_public: boolean;
+  player_name: string;
+  nationality: string;
+  position: string;
+  difficulty: string;
+  current_team_id: string | null;
+  age: number;
+  overall: number;
+  season_number: number;
+  is_retired: boolean;
+  totals: { goals: number; assists: number; apps: number; motm: number };
+  state: CareerState;
+  updated_at: string;
+}
+
+export async function listMyCareers(): Promise<CloudCareerRow[]> {
+  const supabase = requireSupabaseBrowserClient();
+  const { data, error } = await supabase
+    .from("careers")
+    .select("*")
+    .order("updated_at", { ascending: false });
   if (error) throw error;
-  return data;
+  return (data ?? []) as CloudCareerRow[];
+}
+
+export async function deleteCloudCareer(careerId: string): Promise<void> {
+  const supabase = requireSupabaseBrowserClient();
+  const { error } = await supabase.from("careers").delete().eq("id", careerId);
+  if (error) throw error;
 }
 
 function slugify(name: string): string {

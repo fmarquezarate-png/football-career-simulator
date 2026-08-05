@@ -7,19 +7,27 @@ import { POSITION_LABEL } from "@/lib/data/types";
 import { flagUrl, getTeam } from "@/lib/data/loader";
 import { clearLocalCareer, saveLocalCareer } from "@/lib/storage/local";
 import {
-  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam, type ContractOffer,
+  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam,
+  penaltyChance, applyPenalty, EVENTS_PER_SEASON, type ContractOffer,
 } from "@/lib/engine/careerEngine";
+import { shootPenalty, type PenaltyContext, type PenaltyResult } from "@/lib/engine/penalty";
+import { makeRng } from "@/lib/engine/rng";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatMoney, formatNumber } from "@/lib/utils";
+import { fmt, fmtDelta, formatMoney, formatNumber } from "@/lib/utils";
+import { ATTRIBUTE_KEYS, ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine/attributes";
+import { safestChoice } from "@/lib/engine/events";
+import { CareerTimeline } from "./career-timeline";
+import { TrophyCase } from "./trophy-art";
 import { EventChoiceDialog } from "./event-dialog";
+import { PenaltyDialog } from "./penalty-dialog";
 import { OffersDialog } from "./offers-dialog";
 import { SeasonSummaryDialog } from "./season-summary-dialog";
 import { SyncButton } from "./sync-button";
-import { Trophy, Home, RefreshCcw, Zap } from "lucide-react";
+import { Home, RefreshCcw, Zap } from "lucide-react";
 
 export function CareerDashboard({ initialState, onChange }: {
   initialState: CareerState;
@@ -27,7 +35,18 @@ export function CareerDashboard({ initialState, onChange }: {
 }) {
   const [state, setState] = useState<CareerState>(initialState);
   const [queue, setQueue] = useState<EventTemplate[]>([]);
+  /**
+   * Posición de la decisión actual dentro de la temporada. Vive aparte del
+   * estado de la carrera para que el diálogo no se remonte —y pierda el
+   * sorteo ya mostrado— cuando el motor descuenta el evento resuelto.
+   */
+  const [eventIndex, setEventIndex] = useState(0);
   const [offers, setOffers] = useState<ContractOffer[] | null>(null);
+  /**
+   * Penalti decisivo de la temporada. Se comprueba una vez agotadas las
+   * decisiones y antes de cerrar, para que sea el clímax de la temporada.
+   */
+  const [penalty, setPenalty] = useState<PenaltyContext | null>(null);
   const [lastSummary, setLastSummary] = useState<CareerState["history"][number] | null>(null);
 
   const teamInfo = useMemo(() => getTeam(state.currentTeamId), [state.currentTeamId]);
@@ -39,15 +58,52 @@ export function CareerDashboard({ initialState, onChange }: {
   }, [onChange]);
 
   useEffect(() => {
+    // No cargar las decisiones de la temporada siguiente mientras siga abierto
+    // el cierre de la anterior: si no, el diálogo de eventos se monta encima y
+    // las ofertas de fichaje asoman de fondo antes de que toque decidirlas.
+    if (offers || lastSummary || penalty) return;
     if (queue.length === 0 && state.currentSeasonEventsRemaining > 0) {
       setQueue(nextSeasonEvents(state));
     }
-  }, [state, queue.length]);
+  }, [state, queue.length, offers, lastSummary, penalty]);
 
-  function handleChoice(template: EventTemplate, choiceKey: string) {
-    const { state: next } = resolveEvent(state, template, choiceKey);
+  /**
+   * El penalti decisivo cierra la temporada, justo cuando ya no quedan
+   * decisiones. Se comprueba aquí y no al resolver la última elección porque
+   * los eventos llegan en lotes de tres: el final de la tanda no coincide con
+   * el final de la temporada.
+   */
+  useEffect(() => {
+    if (penalty || offers || lastSummary) return;
+    if (state.currentSeasonEventsRemaining > 0) return;
+    if (state.penaltyTakenSeason === state.seasonNumber) return;
+    setPenalty(penaltyChance(state));
+  }, [state, penalty, offers, lastSummary]);
+
+  /**
+   * Resuelve la elección en el motor y persiste el nuevo estado, pero **no**
+   * avanza de evento: el diálogo se queda enseñando el sorteo y los efectos
+   * hasta que el jugador pulsa «Continuar».
+   */
+  function handleResolve(template: EventTemplate, choiceKey: string) {
+    const { state: next, outcome } = resolveEvent(state, template, choiceKey);
     update(next);
+    return outcome;
+  }
+
+  function handleContinue() {
     setQueue(q => q.slice(1));
+    setEventIndex(i => i + 1);
+  }
+
+  function handlePenaltyShot(zone: Parameters<typeof shootPenalty>[1], power: Parameters<typeof shootPenalty>[2]) {
+    const rng = makeRng(`pk-${state.playerName}-${state.seasonNumber}-${Date.now()}`);
+    return shootPenalty(rng, zone, power, state, penalty!);
+  }
+
+  function handlePenaltyDone(result: PenaltyResult) {
+    update(applyPenalty(state, result));
+    setPenalty(null);
   }
 
   function handleEndSeason() {
@@ -56,12 +112,12 @@ export function CareerDashboard({ initialState, onChange }: {
       let s = state;
       let pending = queue.length ? queue : nextSeasonEvents(state, state.currentSeasonEventsRemaining);
       for (const t of pending) {
-        const safest = [...t.choices].sort((a, b) => Math.abs(a.qualityBias) - Math.abs(b.qualityBias))[0];
-        s = resolveEvent(s, t, safest.key).state;
+        s = resolveEvent(s, t, safestChoice(t).key).state;
       }
       const result = endSeason(s);
       update(result.state);
       setQueue([]);
+      setEventIndex(0);
       setOffers(result.offers);
       setLastSummary(result.season);
       return;
@@ -69,6 +125,7 @@ export function CareerDashboard({ initialState, onChange }: {
     const result = endSeason(state);
     update(result.state);
     setQueue([]);
+    setEventIndex(0);
     setOffers(result.offers);
     setLastSummary(result.season);
   }
@@ -85,7 +142,8 @@ export function CareerDashboard({ initialState, onChange }: {
     window.location.href = "/";
   }
 
-  const currentEvent = queue[0];
+  // Las decisiones se pausan mientras el cierre de temporada esté en pantalla.
+  const currentEvent = offers || lastSummary || penalty ? undefined : queue[0];
 
   return (
     <div className="container py-6 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -99,9 +157,9 @@ export function CareerDashboard({ initialState, onChange }: {
               {POSITION_LABEL[state.position]} · {state.age} años
             </div>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <Stat label="OVR" value={state.overall} color="primary" />
-              <Stat label="POT" value={state.potential} color="gold" />
-              <Stat label="REP" value={state.reputation} color="secondary" />
+              <Stat label="OVR" value={fmt(state.overall)} color="primary" />
+              <Stat label="POT" value={fmt(state.potential)} color="gold" />
+              <Stat label="REP" value={fmt(state.reputation)} color="secondary" />
             </div>
           </CardContent>
         </Card>
@@ -121,8 +179,8 @@ export function CareerDashboard({ initialState, onChange }: {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Temporada {state.seasonNumber}</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <Row label="Moral"><Progress value={state.morale} /><span className="text-xs ml-2">{state.morale}</span></Row>
-            <Row label="Fitness"><Progress value={state.fitness} /><span className="text-xs ml-2">{state.fitness}</span></Row>
+            <Row label="Moral"><Progress value={state.morale} /><span className="text-xs ml-2">{fmt(state.morale)}</span></Row>
+            <Row label="Fitness"><Progress value={state.fitness} /><span className="text-xs ml-2">{fmt(state.fitness)}</span></Row>
             <div className="text-xs text-muted-foreground pt-1">Eventos restantes: {state.currentSeasonEventsRemaining}</div>
           </CardContent>
         </Card>
@@ -161,26 +219,21 @@ export function CareerDashboard({ initialState, onChange }: {
           </TabsList>
 
           <TabsContent value="history">
-            <Card><CardContent className="pt-6 space-y-4">
-              {state.trophies.length === 0 && state.awards.length === 0 && (
-                <p className="text-sm text-muted-foreground">Aún sin trofeos. Termina una temporada para empezar a levantar títulos.</p>
-              )}
-              {state.awards.length > 0 && (
-                <div>
-                  <div className="text-xs uppercase text-muted-foreground mb-2">Premios individuales</div>
-                  <div className="flex flex-wrap gap-2">
-                    {state.awards.map((a, i) => <Badge key={i} variant="gold"><Trophy className="h-3 w-3 mr-1" />{a}</Badge>)}
+            <Card><CardContent className="pt-6 space-y-5">
+              {(state.trophies.length > 0 || state.awards.length > 0) && (
+                <div className="rounded-xl border border-border bg-black/20 p-4">
+                  <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Vitrina · {state.trophies.length + state.awards.length} títulos
                   </div>
+                  <TrophyCase trophies={[...state.awards, ...state.trophies]} showLabels />
                 </div>
               )}
-              {state.trophies.length > 0 && (
-                <div>
-                  <div className="text-xs uppercase text-muted-foreground mb-2">Trofeos de club</div>
-                  <div className="flex flex-wrap gap-2">
-                    {state.trophies.map((t, i) => <Badge key={i}>{t}</Badge>)}
-                  </div>
+              <div>
+                <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Temporada a temporada
                 </div>
-              )}
+                <CareerTimeline history={state.history} />
+              </div>
             </CardContent></Card>
           </TabsContent>
 
@@ -207,7 +260,7 @@ export function CareerDashboard({ initialState, onChange }: {
                         <td className="text-center font-semibold">{s.goals}</td>
                         <td className="text-center">{s.assists}</td>
                         <td className="text-center">{s.motm}</td>
-                        <td className="text-center">{s.avgRating}</td>
+                        <td className="text-center">{fmt(s.avgRating)}</td>
                         <td className="text-xs">{[...s.trophies, ...s.individualAwards].join(", ") || "—"}</td>
                       </tr>
                     ))}
@@ -219,13 +272,54 @@ export function CareerDashboard({ initialState, onChange }: {
           </TabsContent>
 
           <TabsContent value="attrs">
-            <Card><CardContent className="pt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(state.attributes).map(([k, v]) => (
-                <div key={k}>
-                  <div className="flex justify-between text-sm mb-1"><span className="capitalize">{k}</span><span className="font-bold">{v}</span></div>
-                  <Progress value={v} />
+            <Card><CardContent className="pt-6 space-y-4">
+              <p className="text-xs text-muted-foreground">
+                Tu media <span className="font-bold text-primary">{fmt(state.overall)}</span> sale
+                de estos atributos según tu posición ({POSITION_LABEL[state.position]}).
+                Se mueven con cada decisión y con lo que hagas en el campo.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {ATTRIBUTE_KEYS.map(k => {
+                  const v = state.attributes[k];
+                  const last = state.history.at(-1)?.attributeChanges?.find(c => c.key === k);
+                  return (
+                    <div key={k}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>{ATTRIBUTE_LABEL[k]}</span>
+                        <span className="flex items-center gap-1.5">
+                          {last && (
+                            <span className={last.delta > 0 ? "text-primary text-xs" : "text-destructive text-xs"}>
+                              {fmtDelta(last.delta)}
+                            </span>
+                          )}
+                          <span className="font-bold">{fmt(v)}</span>
+                        </span>
+                      </div>
+                      <Progress value={v} />
+                    </div>
+                  );
+                })}
+              </div>
+              {(state.history.at(-1)?.attributeChanges?.length ?? 0) > 0 && (
+                <div className="border-t border-border pt-3">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                    Qué te movió la última temporada
+                  </p>
+                  <ul className="space-y-1">
+                    {state.history.at(-1)!.attributeChanges!.map((c, i) => (
+                      <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className={c.delta > 0 ? "font-bold text-primary" : "font-bold text-destructive"}>
+                          {fmtDelta(c.delta)}
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          {ATTRIBUTE_LABEL[c.key as AttributeKey] ?? c.key}
+                        </span>
+                        <span>· {c.reason}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+              )}
             </CardContent></Card>
           </TabsContent>
 
@@ -261,21 +355,36 @@ export function CareerDashboard({ initialState, onChange }: {
 
       {currentEvent && (
         <EventChoiceDialog
+          key={`${state.seasonNumber}-${eventIndex}`}
           event={currentEvent}
-          onChoose={(key) => handleChoice(currentEvent, key)}
+          state={state}
+          onResolve={(key) => handleResolve(currentEvent, key)}
+          onContinue={handleContinue}
+          index={eventIndex}
+          total={EVENTS_PER_SEASON}
         />
       )}
-      {offers && (
-        <OffersDialog offers={offers} currentTeamId={state.currentTeamId} onChoose={chooseOffer} />
+      {penalty && (
+        <PenaltyDialog
+          state={state}
+          context={penalty}
+          onShoot={handlePenaltyShot}
+          onContinue={handlePenaltyDone}
+        />
       )}
-      {lastSummary && !offers && (
+
+      {/* Cierre de temporada: primero el resumen, y solo al cerrarlo, las ofertas. */}
+      {lastSummary && (
         <SeasonSummaryDialog summary={lastSummary} onClose={() => setLastSummary(null)} />
+      )}
+      {offers && !lastSummary && (
+        <OffersDialog offers={offers} currentTeamId={state.currentTeamId} onChoose={chooseOffer} />
       )}
     </div>
   );
 }
 
-function Stat({ label, value, color }: { label: string; value: number; color: string }) {
+function Stat({ label, value, color }: { label: string; value: number | string; color: string }) {
   const colorMap: Record<string, string> = { primary: "text-primary", gold: "text-gold", secondary: "text-muted-foreground" };
   return (
     <div>

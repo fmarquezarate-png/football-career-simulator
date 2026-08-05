@@ -1,13 +1,14 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { SUPABASE_ANON_KEY, SUPABASE_URL, isSupabaseConfigured } from "./env";
 
 interface CookiePayload { name: string; value: string; options?: CookieOptions }
 
 export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -27,8 +28,4 @@ export async function createSupabaseServerClient() {
   );
 }
 
-export function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  );
-}
+export { isSupabaseConfigured };
