@@ -51,15 +51,43 @@ export function ClientCheck({
       });
   }, [clientOk]);
 
+  // Nombrar la variable exacta que falta ahorra la mitad del trabajo: no es lo
+  // mismo «faltan las variables» que «falta esta una».
+  const missing = [
+    !clientHasUrl && !serverHasUrl ? "NEXT_PUBLIC_SUPABASE_URL" : null,
+    !clientHasKey && !serverHasKey ? "NEXT_PUBLIC_SUPABASE_ANON_KEY" : null,
+  ].filter(Boolean) as string[];
+
   const verdict = !serverOk && !clientOk
     ? {
         tone: "bad" as const,
-        title: "Las variables no están puestas en este entorno",
+        title: missing.length === 1
+          ? `Falta una sola variable: ${missing[0]}`
+          : "Faltan las variables de Supabase en este entorno",
         steps: [
+          missing.length === 1
+            ? `Todo lo demás está bien. Solo falta ${missing[0]}.`
+            : `Faltan: ${missing.join(" y ")}.`,
           "Vercel → tu proyecto → Settings → Environment Variables.",
-          "Añade NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY con los valores de Supabase (Settings → API).",
+          missing.includes("NEXT_PUBLIC_SUPABASE_URL")
+            ? "El valor de NEXT_PUBLIC_SUPABASE_URL es el «Project URL» de Supabase (Settings → API). Tiene la forma https://xxxxxxxx.supabase.co, sin barra final."
+            : "El valor de NEXT_PUBLIC_SUPABASE_ANON_KEY es la clave «anon public» o «publishable» de Supabase (Settings → API).",
           "Marca las tres casillas de entorno: Production, Preview y Development.",
           "Deployments → ⋯ del último → Redeploy, DESMARCANDO «Use existing Build Cache».",
+        ],
+      }
+    : missing.length > 0
+    ? {
+        tone: "bad" as const,
+        title: `Falta ${missing.join(" y ")}`,
+        steps: [
+          "El resto de la configuración está bien; solo falta esa variable.",
+          "Vercel → Settings → Environment Variables → Add.",
+          missing.includes("NEXT_PUBLIC_SUPABASE_URL")
+            ? "Valor: el «Project URL» de Supabase (Settings → API), con la forma https://xxxxxxxx.supabase.co y sin barra final."
+            : "Valor: la clave «anon public» o «publishable» de Supabase (Settings → API).",
+          "Márcala para Production, Preview y Development.",
+          "Deployments → ⋯ → Redeploy sin «Use existing Build Cache».",
         ],
       }
     : serverOk && !clientOk
