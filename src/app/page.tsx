@@ -43,7 +43,7 @@ export default function LandingPage() {
           <dl className="mt-14 grid w-full max-w-3xl grid-cols-2 gap-4 md:grid-cols-4">
             <Stat value={`${COUNTRIES.length}`} label="países jugables" />
             <Stat value="5" label="grandes ligas" />
-            <Stat value="5" label="decisiones/temporada" />
+            <Stat value="3" label="decisiones/temporada" />
             <Stat value="20" label="temporadas de carrera" />
           </dl>
         </section>

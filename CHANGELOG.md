@@ -10,6 +10,88 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 
 ## [No publicado]
 
+## [2.8.0] — El final de la carrera
+
+Segunda pasada sobre la referencia, con el vídeo del tramo final: mercado de
+pases, retirada y ficha para compartir.
+
+### Cambiado
+- **El mercado de pases también deja de ser un modal.** Es la última decisión
+  de la temporada y ahora se ve donde se ven las demás: al pie de la tabla,
+  con el mismo lenguaje —tarjetas de club que se encienden al elegirlas y
+  apagan al resto—. Junto a la carrera que las ha provocado, una oferta del
+  Brasileirão después de 20 goles en Chile se lee de otra manera.
+- Como mucho **tres ofertas** más la de quedarse. Con más, elegir club se
+  convertía en rellenar un formulario.
+- **Chapa de media en oro, plata y bronce** en vez de la rampa verde-ámbar. El
+  color dice de un vistazo en qué escalón del fútbol estabas cada temporada.
+- Un icono diminuto delante de cada cifra de la tabla (camiseta, balón, bota):
+  con seis columnas a tamaño de móvil, es lo que la deja leer sin subir a la
+  cabecera.
+- Los trofeos de cada temporada van junto al club, mucho más pequeños y como
+  mucho tres: son un adorno de la fila, no pueden comerse el nombre del equipo.
+- La Community Shield y las supercopas se dibujan como **escudo**, no como
+  copa. A tamaño pequeño la silueta anterior no se distinguía de una copa.
+
+### Añadido
+- **Panel de fin de carrera**: los cuatro números que resumen veinte años
+  —partidos, goles, asistencias y títulos— con la vitrina completa debajo.
+- **Ficha para compartir**, que enseña la *mejor* versión del jugador y no la
+  última: la media y el valor del pico, no los de los 38 años ya de vuelta en
+  casa. Lleva la trayectoria en escudos, un escudo por club sin repetir los
+  regresos, y los títulos. Con sesión iniciada genera enlace público; en modo
+  invitado se ve igual, sin enlace.
+
+### Corregido
+- Un nombre de club largo (RCD Espanyol Barcelona) estiraba la cabecera de la
+  tabla y sacaba la página de la pantalla en móvil: 71 px de scroll lateral.
+- Retirado ya no quedaba una fila fantasma de la temporada siguiente.
+
+### Eliminado
+- `offers-dialog.tsx`, sustituido por el mercado en línea.
+
+## [2.7.0] — La carrera en una sola pantalla
+
+Rediseño completo de la pantalla de carrera, siguiendo la referencia que pasó
+Fran (copero.com.ar). El cambio de fondo no es de estilo sino de arquitectura:
+**se acabaron los modales para decidir**.
+
+### Cambiado
+- **La tabla de carrera es la pantalla.** Una fila por edad, de los 18 a los
+  38, con las temporadas que quedan por jugar ya dibujadas en gris: se ve el
+  hueco que falta por llenar y cada temporada cerrada lo va ocupando. Encima,
+  una cabecera con la chapa de media a color, bandera, posición, escudo y club,
+  edad y valor de mercado.
+- **La decisión vive al pie de la tabla, no en un modal.** El jugador tiene
+  delante sus números —media, goles, club, valor— justo mientras elige. Esto
+  hace innecesario el mecanismo de «aparcar la decisión» que se añadió en la
+  2.6.0: ya no hay nada que cerrar para ir a mirar la temporada.
+- **Fuera las pestañas.** Atributos, vitrina, contratos e historial pasan a
+  bloques plegables (`<details>` nativo, sin JS) que en escritorio ocupan la
+  columna de al lado y en móvil se apilan bajo la decisión.
+- El sorteo de éxito/fallo dura ~950 ms en vez de ~1700: encadenar tres
+  decisiones con casi dos segundos de espera cada una se hacía pesado.
+- Los cambios de atributo se agrupan por motivo. El desarrollo normal de una
+  temporada escupía seis líneas idénticas de «Desarrollo a los 19».
+
+### Añadido
+- **Valor de mercado.** Crece de forma muy no lineal con la media, se hunde a
+  partir de los 29 y depende de la liga: el mismo futbolista vale más en la
+  Premier que en Primera de Chile, porque ahí está el dinero que lo puede
+  pagar. Formato compacto: `€450K`, `€12,5M`.
+- La selección queda fijada al pie de la tabla como una fila más, con
+  partidos y goles internacionales acumulados.
+
+### Eliminado
+- `event-dialog.tsx` y `career-timeline.tsx`: los sustituyen el panel de
+  decisión en línea y la tabla de carrera.
+
+### Probado
+- 18 comprobaciones en escritorio (1280 px) y otras 18 en móvil (390 px) sobre
+  el build de producción: temporada completa con sus tres decisiones, resumen,
+  mercado de fichajes y arranque de la siguiente, sin errores de consola, sin
+  scroll horizontal y sin decimales largos.
+
 ### Seguridad
 - La migración endurece sus dos funciones de trigger, siguiendo el linter de
   Supabase: `touch_updated_at` fija `search_path` (sin él se puede secuestrar
@@ -19,7 +101,28 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
   funcionando: se ejecutan como el propietario, no como quien hace la
   petición.
 
+## [2.6.0] — Ritmo de la partida
+
+### Cambiado
+- **3 decisiones por temporada** en lugar de 5. Con cinco, una carrera de 19
+  temporadas pedía 57 decisiones y se hacía interminable.
+- **Catálogo de 74 eventos** (antes 44), cargando en el tramo medio y tardío
+  de carrera, que era donde se secaba.
+- La memoria de eventos pasa de 24 a 120 claves: un evento no vuelve hasta que
+  se agotan todos los que encajan con tu momento de carrera.
+
+### Medido
+- Decisiones de una carrera que repiten un evento ya visto: **del 41 % al 0 %**.
+  Antes la primera repetición llegaba en la temporada 10; ahora una carrera
+  completa no repite ninguna.
+- Las 30 opciones nuevas pasaron el mismo control de dominancia por valor
+  esperado que el resto: se corrigieron 10 casos y quedan 0.
+
 ### Añadido
+- **La decisión se puede aparcar.** Ahora el diálogo se cierra para consultar
+  estadísticas, atributos, palmarés o contratos, y un botón «Retomar
+  decisiones» con el contador la recupera. Una vez elegida una opción ya no se
+  puede cerrar: hay que ver el efecto.
 - `scripts/fetch-world-crests.mjs`: descarga los escudos oficiales de las nueve
   ligas de fuera de Europa desde **TheSportsDB** y, como alternativa,
   **Wikipedia / Wikimedia Commons**. Sustituye los blasones generados y deja

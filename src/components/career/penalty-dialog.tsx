@@ -194,7 +194,7 @@ function Goal({
 
         {/* Balón */}
         <circle
-          className="transition-all duration-[900ms] ease-out"
+          className="transition-all duration-700 ease-out"
           cx={shooting ? ballX : 160}
           cy={shooting ? ballY : 138}
           r={shooting ? 6 : 7}

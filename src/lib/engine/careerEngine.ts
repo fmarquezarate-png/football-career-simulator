@@ -19,10 +19,14 @@ import { simulateNationalTeam } from "./nationalTeam";
 import { generateOffers, type ContractOffer } from "./contracts";
 
 /**
- * Decisiones por temporada. Cinco mantiene el ritmo: suficientes para que la
- * temporada tenga forma, pocas como para que cada una pese.
+ * Decisiones por temporada.
+ *
+ * Tres, no cinco. Con cinco, una carrera de 16 temporadas pedía 80 decisiones
+ * para un catálogo de 44 eventos: por fuerza se repetían y la partida se hacía
+ * interminable. Con tres son 48, casi una por evento del catálogo, así que
+ * cada temporada aporta cosas nuevas y la carrera se termina.
  */
-export const EVENTS_PER_SEASON = 5;
+export const EVENTS_PER_SEASON = 3;
 
 export interface NewCareerParams {
   playerName: string;
