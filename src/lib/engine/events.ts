@@ -842,42 +842,6 @@ const COMPETITION: EventTemplate[] = [
     ],
   },
   {
-    key: "penalty_shootout",
-    title: "Tanda de penaltis en una final",
-    description: "El capitán pregunta quién quiere el quinto.",
-    weight: 7,
-    conditions: { minSeason: 2 },
-    choices: [
-      {
-        key: "take_fifth", label: "Pedir el penalti decisivo",
-        description: "Todo o nada delante de sesenta mil personas.",
-        effects: { goals: 1, reputation: 16, morale: 12 },
-        failureEffects: { reputation: -12, morale: -18, overall: -0.6 },
-        risk: {
-          successChance: 0.5, modifier: "morale",
-          successLabel: "Lo metes. Eres leyenda esta noche.",
-          failureLabel: "Lo fallas. Vas a tardar en olvidarlo.",
-        },
-      },
-      {
-        key: "take_second", label: "Cogerte el segundo",
-        description: "Responsabilidad sin la losa del último.",
-        effects: { reputation: 5, morale: 3 },
-        failureEffects: { reputation: -4, morale: -8 },
-        risk: {
-          successChance: 0.68, modifier: "morale",
-          successLabel: "Lo metes con oficio.",
-          failureLabel: "Se te va arriba y pesa.",
-        },
-      },
-      {
-        key: "pass_penalty", label: "Dejárselo a otro",
-        description: "Que lo tire quien esté mejor de cabeza.",
-        effects: { morale: -4, reputation: -5, fitness: 2 },
-      },
-    ],
-  },
-  {
     key: "derby_provocation",
     title: "El rival te busca las cosquillas en el derbi",
     description: "Llevas cuarenta minutos aguantando codazos y comentarios.",

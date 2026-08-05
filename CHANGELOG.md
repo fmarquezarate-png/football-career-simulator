@@ -14,8 +14,48 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 - Inicio de sesión con Google: la app sigue mostrando «Modo invitado» porque
   las claves `NEXT_PUBLIC_*` no llegan al bundle de cliente. Ver
   [`docs/google-oauth.md`](docs/google-oauth.md).
-- Parte 3: catálogo completo de ligas, origen realista por nacionalidad y
-  momentos jugables (penalti de Champions).
+- Escudos reales para las nueve ligas de fuera de Europa: la única fuente
+  abierta encontrada cubre solo las 25 ligas europeas principales. Esos 144
+  clubes usan un escudo generado con sus colores reales.
+
+---
+
+## [2.4.0] — Parte 3 · El mundo entero
+
+### Añadido
+- **33 ligas y 524 equipos**, de 5 ligas y 96 equipos. Europa aporta 24
+  competiciones con escudos reales; Brasil, Argentina, México, Arabia Saudí,
+  Estados Unidos, Japón, Colombia, **Chile** y Uruguay se añaden con escudos
+  generados a partir de los colores reales de cada club.
+- **Origen realista**. Antes el club de debut se sorteaba entre las 5 grandes
+  ligas para todo el mundo. Ahora el sorteo tiene dos pasos: primero el país,
+  que decide tu nacionalidad, y después el club dentro de esa liga. Un chileno
+  debuta en Chile el 74 % de las veces en dificultad normal, el 94 % en
+  Leyenda y el 44 % en Promesa de oro; si sale fuera, va antes a Argentina o
+  Brasil que a Europa. Los países sin liga en el juego (Senegal, Marruecos)
+  salen por sus rutas históricas: Francia, Bélgica, Portugal, Turquía.
+- La pantalla de creación muestra **dónde es probable que debutes** antes de
+  empezar.
+- **El penalti decisivo**, jugable. En una final, eliges esquina y tipo de
+  disparo sobre una portería dibujada mientras el portero elige a la vez.
+  Ninguna combinación domina: entre el 71 % y el 81 % de acierto, con la
+  Panenka como la apuesta de verdad. Ocurre en torno al 26 % de las
+  temporadas y solo si tu club llega a una final.
+- Copas, supercopas y torneos continentales propios de cada liga
+  (Copa Libertadores, Copa Chile, Copa do Brasil, King's Cup…).
+- Franjas de club calculadas **dentro de cada liga**: Colo-Colo es un grande
+  en Chile aunque su media no llegue a la de un colista de la Premier.
+- `scripts/build-leagues.mjs` regenera todo el catálogo desde
+  `scripts/leagues.config.mjs`.
+
+### Corregido
+- Las partidas guardadas con el catálogo anterior apuntaban a clubes que ya no
+  existen. Se reasignan por nombre al cargar, y el histórico y los contratos
+  recuperan sus escudos.
+
+### Cambiado
+- El evento narrativo de tanda de penaltis se retira: ahora el penalti se
+  juega de verdad.
 
 ---
 

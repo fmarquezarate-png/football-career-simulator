@@ -1,0 +1,327 @@
+/**
+ * Catálogo de ligas jugables.
+ *
+ * `strength` es el nivel medio de la liga (0-100) y gobierna todo lo demás:
+ * la media de sus equipos, los presupuestos y lo difícil que es dar el salto
+ * desde ella a otra. Está calibrado a ojo de coeficiente UEFA / Conmebol.
+ *
+ * Dos orígenes de datos:
+ *  - `repoDir`: liga europea cuyos nombres y escudos salen del repositorio de
+ *    logos (ver `scripts/sync-crests.mjs`). No hay que escribir la plantilla.
+ *  - `teams`: liga del resto del mundo, escrita a mano con los colores reales
+ *    de cada club, de los que se genera el escudo.
+ *
+ * `top` ordena los equipos más fuertes de una liga `repoDir`; el resto se
+ * reparte por debajo en orden alfabético estable.
+ */
+
+export const LEAGUES = [
+  /* ---------------- Europa · escudos reales ---------------- */
+  {
+    id: "en1", name: "Premier League", country: "Inglaterra", countryCode: "gb-eng",
+    confederation: "UEFA", strength: 90, rounds: 38, repoDir: "England - Premier League",
+    top: ["Liverpool FC", "Manchester City", "Arsenal FC", "Chelsea FC", "Newcastle United", "Aston Villa", "Tottenham Hotspur", "Manchester United"],
+  },
+  {
+    id: "es1", name: "LaLiga", country: "España", countryCode: "es",
+    confederation: "UEFA", strength: 88, rounds: 38, repoDir: "Spain - LaLiga",
+    top: ["Real Madrid", "FC Barcelona", "Atlético de Madrid", "Athletic Bilbao", "Villarreal CF", "Real Betis Balompié", "Real Sociedad", "Sevilla FC"],
+  },
+  {
+    id: "it1", name: "Serie A", country: "Italia", countryCode: "it",
+    confederation: "UEFA", strength: 84, rounds: 38, repoDir: "Italy - Serie A",
+    top: ["Inter Milan", "SSC Napoli", "Juventus FC", "AC Milan", "Atalanta BC", "AS Roma", "SS Lazio", "ACF Fiorentina"],
+  },
+  {
+    id: "de1", name: "Bundesliga", country: "Alemania", countryCode: "de",
+    confederation: "UEFA", strength: 84, rounds: 34, repoDir: "Germany - Bundesliga",
+    top: ["Bayern Munich", "Bayer 04 Leverkusen", "Borussia Dortmund", "RB Leipzig", "Eintracht Frankfurt", "VfB Stuttgart"],
+  },
+  {
+    id: "fr1", name: "Ligue 1", country: "Francia", countryCode: "fr",
+    confederation: "UEFA", strength: 80, rounds: 34, repoDir: "France - Ligue 1",
+    top: ["Paris Saint-Germain", "Olympique Marseille", "AS Monaco", "LOSC Lille", "OGC Nice", "Olympique Lyon"],
+  },
+  {
+    id: "pt1", name: "Liga Portugal", country: "Portugal", countryCode: "pt",
+    confederation: "UEFA", strength: 75, rounds: 34, repoDir: "Portugal - Liga Portugal",
+    top: ["SL Benfica", "FC Porto", "Sporting CP", "SC Braga"],
+  },
+  {
+    id: "nl1", name: "Eredivisie", country: "Países Bajos", countryCode: "nl",
+    confederation: "UEFA", strength: 73, rounds: 34, repoDir: "Netherlands - Eredivisie",
+    top: ["PSV Eindhoven", "Feyenoord Rotterdam", "Ajax Amsterdam", "AZ Alkmaar", "FC Twente Enschede"],
+  },
+  {
+    id: "tr1", name: "Süper Lig", country: "Turquía", countryCode: "tr",
+    confederation: "UEFA", strength: 71, rounds: 34, repoDir: "Türkiye - Süper Lig",
+    top: ["Galatasaray", "Fenerbahce", "Besiktas JK", "Trabzonspor", "Basaksehir FK"],
+  },
+  {
+    id: "be1", name: "Jupiler Pro League", country: "Bélgica", countryCode: "be",
+    confederation: "UEFA", strength: 70, rounds: 30, repoDir: "Belgium - Jupiler Pro League",
+    top: ["Club Brugge KV", "Union Saint-Gilloise", "RSC Anderlecht", "KRC Genk", "Royal Antwerp FC"],
+  },
+  {
+    id: "at1", name: "Bundesliga austríaca", country: "Austria", countryCode: "at",
+    confederation: "UEFA", strength: 66, rounds: 32, repoDir: "Austria - Bundesliga",
+  },
+  {
+    id: "ch1", name: "Super League", country: "Suiza", countryCode: "ch",
+    confederation: "UEFA", strength: 66, rounds: 33, repoDir: "Switzerland - Super League",
+  },
+  {
+    id: "gr1", name: "Super League", country: "Grecia", countryCode: "gr",
+    confederation: "UEFA", strength: 66, rounds: 26, repoDir: "Greece - Super League 1",
+    top: ["Olympiacos Piraeus", "PAOK Thessaloniki", "AEK Athens", "Panathinaikos"],
+  },
+  {
+    id: "sco1", name: "Scottish Premiership", country: "Escocia", countryCode: "gb-sct",
+    confederation: "UEFA", strength: 65, rounds: 38, repoDir: "Scotland - Scottish Premiership",
+    top: ["Celtic FC", "Rangers FC", "Aberdeen FC", "Heart of Midlothian FC"],
+  },
+  {
+    id: "cz1", name: "Chance Liga", country: "Chequia", countryCode: "cz",
+    confederation: "UEFA", strength: 64, rounds: 30, repoDir: "Czech Republic - Chance Liga",
+  },
+  {
+    id: "dk1", name: "Superliga", country: "Dinamarca", countryCode: "dk",
+    confederation: "UEFA", strength: 64, rounds: 32, repoDir: "Denmark - Superliga",
+  },
+  {
+    id: "pl1", name: "Ekstraklasa", country: "Polonia", countryCode: "pl",
+    confederation: "UEFA", strength: 63, rounds: 34, repoDir: "Poland - PKO BP Ekstraklasa",
+  },
+  {
+    id: "hr1", name: "SuperSport HNL", country: "Croacia", countryCode: "hr",
+    confederation: "UEFA", strength: 63, rounds: 36, repoDir: "Croatia - SuperSport HNL",
+  },
+  {
+    id: "ua1", name: "Premier Liga", country: "Ucrania", countryCode: "ua",
+    confederation: "UEFA", strength: 63, rounds: 30, repoDir: "Ukraine - Premier Liga",
+  },
+  {
+    id: "rs1", name: "Super liga", country: "Serbia", countryCode: "rs",
+    confederation: "UEFA", strength: 62, rounds: 30, repoDir: "Serbia - Super liga Srbije",
+  },
+  {
+    id: "no1", name: "Eliteserien", country: "Noruega", countryCode: "no",
+    confederation: "UEFA", strength: 62, rounds: 30, repoDir: "Norway - Eliteserien",
+  },
+  {
+    id: "se1", name: "Allsvenskan", country: "Suecia", countryCode: "se",
+    confederation: "UEFA", strength: 62, rounds: 30, repoDir: "Sweden - Allsvenskan",
+  },
+  {
+    id: "ro1", name: "SuperLiga", country: "Rumanía", countryCode: "ro",
+    confederation: "UEFA", strength: 61, rounds: 30, repoDir: "Romania - SuperLiga",
+  },
+  {
+    id: "il1", name: "Ligat ha'Al", country: "Israel", countryCode: "il",
+    confederation: "UEFA", strength: 60, rounds: 26, repoDir: "Israel - Ligat ha'Al",
+  },
+  {
+    id: "bg1", name: "efbet Liga", country: "Bulgaria", countryCode: "bg",
+    confederation: "UEFA", strength: 58, rounds: 26, repoDir: "Bulgaria - efbet Liga",
+  },
+
+  /* ---------------- Resto del mundo · escudos generados ---------------- */
+  {
+    id: "br1", name: "Brasileirão", country: "Brasil", countryCode: "br",
+    confederation: "CONMEBOL", strength: 76, rounds: 38,
+    teams: [
+      { name: "Flamengo", city: "Río de Janeiro", colors: ["#c52613", "#111111"] },
+      { name: "Palmeiras", city: "São Paulo", colors: ["#026937", "#ffffff"] },
+      { name: "Botafogo", city: "Río de Janeiro", colors: ["#111111", "#ffffff"] },
+      { name: "São Paulo FC", city: "São Paulo", colors: ["#c8102e", "#111111"] },
+      { name: "Fluminense", city: "Río de Janeiro", colors: ["#870A28", "#00613C"] },
+      { name: "Atlético Mineiro", city: "Belo Horizonte", colors: ["#111111", "#ffffff"] },
+      { name: "Internacional", city: "Porto Alegre", colors: ["#c8102e", "#ffffff"] },
+      { name: "Grêmio", city: "Porto Alegre", colors: ["#0d80bf", "#111111"] },
+      { name: "Corinthians", city: "São Paulo", colors: ["#111111", "#ffffff"] },
+      { name: "Cruzeiro", city: "Belo Horizonte", colors: ["#1e3a8a", "#ffffff"] },
+      { name: "Santos FC", city: "Santos", colors: ["#111111", "#ffffff"] },
+      { name: "Bahia", city: "Salvador", colors: ["#1d5cab", "#c8102e"] },
+      { name: "Vasco da Gama", city: "Río de Janeiro", colors: ["#111111", "#ffffff"] },
+      { name: "Fortaleza", city: "Fortaleza", colors: ["#1b3d8f", "#c8102e"] },
+      { name: "Athletico Paranaense", city: "Curitiba", colors: ["#c8102e", "#111111"] },
+      { name: "Vitória", city: "Salvador", colors: ["#c8102e", "#111111"] },
+    ],
+  },
+  {
+    id: "ar1", name: "Liga Profesional", country: "Argentina", countryCode: "ar",
+    confederation: "CONMEBOL", strength: 70, rounds: 30,
+    teams: [
+      { name: "River Plate", city: "Buenos Aires", colors: ["#ffffff", "#c8102e"] },
+      { name: "Boca Juniors", city: "Buenos Aires", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Racing Club", city: "Avellaneda", colors: ["#6cabdd", "#ffffff"] },
+      { name: "Vélez Sarsfield", city: "Buenos Aires", colors: ["#ffffff", "#1e3a8a"] },
+      { name: "Estudiantes", city: "La Plata", colors: ["#c8102e", "#ffffff"] },
+      { name: "San Lorenzo", city: "Buenos Aires", colors: ["#0a3d91", "#c8102e"] },
+      { name: "Independiente", city: "Avellaneda", colors: ["#c8102e", "#ffffff"] },
+      { name: "Talleres", city: "Córdoba", colors: ["#1e5eb8", "#ffffff"] },
+      { name: "Lanús", city: "Lanús", colors: ["#7a1128", "#ffffff"] },
+      { name: "Argentinos Juniors", city: "Buenos Aires", colors: ["#c8102e", "#ffffff"] },
+      { name: "Newell's Old Boys", city: "Rosario", colors: ["#c8102e", "#111111"] },
+      { name: "Rosario Central", city: "Rosario", colors: ["#f4c430", "#0a3d91"] },
+      { name: "Huracán", city: "Buenos Aires", colors: ["#ffffff", "#c8102e"] },
+      { name: "Defensa y Justicia", city: "Florencio Varela", colors: ["#f4c430", "#046a38"] },
+      { name: "Godoy Cruz", city: "Mendoza", colors: ["#0a3d91", "#ffffff"] },
+      { name: "Banfield", city: "Banfield", colors: ["#046a38", "#ffffff"] },
+    ],
+  },
+  {
+    id: "mx1", name: "Liga MX", country: "México", countryCode: "mx",
+    confederation: "CONCACAF", strength: 68, rounds: 34,
+    teams: [
+      { name: "Club América", city: "Ciudad de México", colors: ["#f4c430", "#0a3d91"] },
+      { name: "Tigres UANL", city: "Monterrey", colors: ["#f4c430", "#0a3d91"] },
+      { name: "CF Monterrey", city: "Monterrey", colors: ["#0a3d91", "#ffffff"] },
+      { name: "Cruz Azul", city: "Ciudad de México", colors: ["#12457c", "#ffffff"] },
+      { name: "Guadalajara", city: "Guadalajara", colors: ["#c8102e", "#ffffff"] },
+      { name: "Toluca", city: "Toluca", colors: ["#c8102e", "#ffffff"] },
+      { name: "Pumas UNAM", city: "Ciudad de México", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Santos Laguna", city: "Torreón", colors: ["#046a38", "#ffffff"] },
+      { name: "León", city: "León", colors: ["#046a38", "#ffffff"] },
+      { name: "Pachuca", city: "Pachuca", colors: ["#1e3a8a", "#ffffff"] },
+      { name: "Atlas", city: "Guadalajara", colors: ["#c8102e", "#111111"] },
+      { name: "Necaxa", city: "Aguascalientes", colors: ["#c8102e", "#ffffff"] },
+      { name: "Puebla", city: "Puebla", colors: ["#1e3a8a", "#ffffff"] },
+      { name: "Tijuana", city: "Tijuana", colors: ["#c8102e", "#111111"] },
+      { name: "Mazatlán", city: "Mazatlán", colors: ["#5b2a86", "#ffffff"] },
+      { name: "Querétaro", city: "Querétaro", colors: ["#111111", "#1e3a8a"] },
+    ],
+  },
+  {
+    id: "sa1", name: "Saudi Pro League", country: "Arabia Saudí", countryCode: "sa",
+    confederation: "AFC", strength: 69, rounds: 34,
+    teams: [
+      { name: "Al-Hilal", city: "Riad", colors: ["#0a3d91", "#ffffff"] },
+      { name: "Al-Nassr", city: "Riad", colors: ["#f4c430", "#0a3d91"] },
+      { name: "Al-Ittihad", city: "Yeda", colors: ["#f4c430", "#111111"] },
+      { name: "Al-Ahli", city: "Yeda", colors: ["#046a38", "#ffffff"] },
+      { name: "Al-Qadsiah", city: "Jobar", colors: ["#f4c430", "#0a3d91"] },
+      { name: "Al-Shabab", city: "Riad", colors: ["#ffffff", "#111111"] },
+      { name: "Al-Ettifaq", city: "Dammam", colors: ["#046a38", "#ffffff"] },
+      { name: "Al-Taawoun", city: "Buraida", colors: ["#f4c430", "#111111"] },
+      { name: "Al-Fateh", city: "Al-Hasa", colors: ["#0a3d91", "#ffffff"] },
+      { name: "Al-Khaleej", city: "Saihat", colors: ["#046a38", "#f4c430"] },
+      { name: "Al-Riyadh", city: "Riad", colors: ["#ffffff", "#0a3d91"] },
+      { name: "Damac", city: "Khamis Mushait", colors: ["#046a38", "#ffffff"] },
+      { name: "Al-Okhdood", city: "Najran", colors: ["#c8102e", "#ffffff"] },
+      { name: "Al-Wehda", city: "La Meca", colors: ["#c8102e", "#111111"] },
+      { name: "Al-Fayha", city: "Al Majma'ah", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Al-Kholood", city: "Ar Rass", colors: ["#111111", "#f4c430"] },
+    ],
+  },
+  {
+    id: "us1", name: "Major League Soccer", country: "Estados Unidos", countryCode: "us",
+    confederation: "CONCACAF", strength: 65, rounds: 34,
+    teams: [
+      { name: "Inter Miami CF", city: "Miami", colors: ["#f5b6cd", "#111111"] },
+      { name: "LAFC", city: "Los Ángeles", colors: ["#111111", "#c39e6d"] },
+      { name: "LA Galaxy", city: "Los Ángeles", colors: ["#00245d", "#f4c430"] },
+      { name: "Seattle Sounders", city: "Seattle", colors: ["#5d9741", "#00245d"] },
+      { name: "Columbus Crew", city: "Columbus", colors: ["#f4c430", "#111111"] },
+      { name: "FC Cincinnati", city: "Cincinnati", colors: ["#f4560c", "#0a3d91"] },
+      { name: "Philadelphia Union", city: "Filadelfia", colors: ["#0a2240", "#b3a369"] },
+      { name: "Atlanta United", city: "Atlanta", colors: ["#7a1128", "#111111"] },
+      { name: "New York City FC", city: "Nueva York", colors: ["#6cabdd", "#111111"] },
+      { name: "New York Red Bulls", city: "Nueva Jersey", colors: ["#c8102e", "#ffffff"] },
+      { name: "Portland Timbers", city: "Portland", colors: ["#004812", "#f4c430"] },
+      { name: "Orlando City", city: "Orlando", colors: ["#5b2a86", "#ffffff"] },
+      { name: "Austin FC", city: "Austin", colors: ["#00b140", "#111111"] },
+      { name: "Real Salt Lake", city: "Salt Lake City", colors: ["#b30838", "#f4c430"] },
+      { name: "Nashville SC", city: "Nashville", colors: ["#f4c430", "#1e3a8a"] },
+      { name: "CF Montréal", city: "Montreal", colors: ["#0a3d91", "#111111"] },
+    ],
+  },
+  {
+    id: "jp1", name: "J1 League", country: "Japón", countryCode: "jp",
+    confederation: "AFC", strength: 65, rounds: 34,
+    teams: [
+      { name: "Vissel Kobe", city: "Kobe", colors: ["#7a1128", "#ffffff"] },
+      { name: "Sanfrecce Hiroshima", city: "Hiroshima", colors: ["#5b2a86", "#ffffff"] },
+      { name: "Kashima Antlers", city: "Kashima", colors: ["#8b1a1a", "#ffffff"] },
+      { name: "Machida Zelvia", city: "Machida", colors: ["#0a3d91", "#87ceeb"] },
+      { name: "Gamba Osaka", city: "Osaka", colors: ["#0a3d91", "#111111"] },
+      { name: "Cerezo Osaka", city: "Osaka", colors: ["#f5b6cd", "#111111"] },
+      { name: "Kawasaki Frontale", city: "Kawasaki", colors: ["#6cabdd", "#111111"] },
+      { name: "Yokohama F. Marinos", city: "Yokohama", colors: ["#0a3d91", "#c8102e"] },
+      { name: "FC Tokyo", city: "Tokio", colors: ["#c8102e", "#0a3d91"] },
+      { name: "Urawa Red Diamonds", city: "Saitama", colors: ["#c8102e", "#111111"] },
+      { name: "Nagoya Grampus", city: "Nagoya", colors: ["#c8102e", "#f4c430"] },
+      { name: "Avispa Fukuoka", city: "Fukuoka", colors: ["#0a3d91", "#87ceeb"] },
+      { name: "Kyoto Sanga", city: "Kioto", colors: ["#5b2a86", "#c8102e"] },
+      { name: "Shonan Bellmare", city: "Hiratsuka", colors: ["#046a38", "#87ceeb"] },
+      { name: "Albirex Niigata", city: "Niigata", colors: ["#f4a900", "#0a3d91"] },
+      { name: "Consadole Sapporo", city: "Sapporo", colors: ["#c8102e", "#111111"] },
+    ],
+  },
+  {
+    id: "co1", name: "Categoría Primera A", country: "Colombia", countryCode: "co",
+    confederation: "CONMEBOL", strength: 61, rounds: 30,
+    teams: [
+      { name: "Atlético Nacional", city: "Medellín", colors: ["#046a38", "#ffffff"] },
+      { name: "Millonarios", city: "Bogotá", colors: ["#0a3d91", "#ffffff"] },
+      { name: "América de Cali", city: "Cali", colors: ["#c8102e", "#ffffff"] },
+      { name: "Junior", city: "Barranquilla", colors: ["#c8102e", "#ffffff"] },
+      { name: "Deportivo Cali", city: "Cali", colors: ["#046a38", "#ffffff"] },
+      { name: "Independiente Medellín", city: "Medellín", colors: ["#c8102e", "#0a3d91"] },
+      { name: "Santa Fe", city: "Bogotá", colors: ["#c8102e", "#ffffff"] },
+      { name: "Deportes Tolima", city: "Ibagué", colors: ["#f4c430", "#c8102e"] },
+      { name: "Once Caldas", city: "Manizales", colors: ["#ffffff", "#046a38"] },
+      { name: "Atlético Bucaramanga", city: "Bucaramanga", colors: ["#f4c430", "#046a38"] },
+      { name: "Águilas Doradas", city: "Rionegro", colors: ["#f4c430", "#111111"] },
+      { name: "Alianza FC", city: "Valledupar", colors: ["#c8102e", "#f4c430"] },
+      { name: "Envigado", city: "Envigado", colors: ["#f4a900", "#111111"] },
+      { name: "La Equidad", city: "Bogotá", colors: ["#046a38", "#ffffff"] },
+      { name: "Fortaleza CEIF", city: "Bogotá", colors: ["#f4c430", "#0a3d91"] },
+      { name: "Deportivo Pasto", city: "Pasto", colors: ["#c8102e", "#f4c430"] },
+    ],
+  },
+  {
+    id: "cl1", name: "Primera División", country: "Chile", countryCode: "cl",
+    confederation: "CONMEBOL", strength: 59, rounds: 30,
+    teams: [
+      { name: "Colo-Colo", city: "Santiago", colors: ["#111111", "#ffffff"] },
+      { name: "Universidad de Chile", city: "Santiago", colors: ["#0a3d91", "#c8102e"] },
+      { name: "Universidad Católica", city: "Santiago", colors: ["#ffffff", "#0a3d91"] },
+      { name: "Coquimbo Unido", city: "Coquimbo", colors: ["#f4c430", "#111111"] },
+      { name: "O'Higgins", city: "Rancagua", colors: ["#6cabdd", "#111111"] },
+      { name: "Huachipato", city: "Talcahuano", colors: ["#111111", "#6cabdd"] },
+      { name: "Palestino", city: "Santiago", colors: ["#046a38", "#c8102e"] },
+      { name: "Audax Italiano", city: "Santiago", colors: ["#046a38", "#ffffff"] },
+      { name: "Unión Española", city: "Santiago", colors: ["#c8102e", "#ffffff"] },
+      { name: "Cobresal", city: "El Salvador", colors: ["#f4a900", "#111111"] },
+      { name: "Ñublense", city: "Chillán", colors: ["#c8102e", "#0a3d91"] },
+      { name: "Everton", city: "Viña del Mar", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Deportes Iquique", city: "Iquique", colors: ["#c8102e", "#ffffff"] },
+      { name: "Unión La Calera", city: "La Calera", colors: ["#c8102e", "#111111"] },
+      { name: "Deportes Limache", city: "Limache", colors: ["#046a38", "#ffffff"] },
+      { name: "La Serena", city: "La Serena", colors: ["#c8102e", "#f4c430"] },
+    ],
+  },
+  {
+    id: "uy1", name: "Primera División", country: "Uruguay", countryCode: "uy",
+    confederation: "CONMEBOL", strength: 59, rounds: 30,
+    teams: [
+      { name: "Peñarol", city: "Montevideo", colors: ["#f4c430", "#111111"] },
+      { name: "Nacional", city: "Montevideo", colors: ["#ffffff", "#0a3d91"] },
+      { name: "Defensor Sporting", city: "Montevideo", colors: ["#5b2a86", "#ffffff"] },
+      { name: "Liverpool FC Montevideo", city: "Montevideo", colors: ["#111111", "#0a3d91"] },
+      { name: "Danubio", city: "Montevideo", colors: ["#ffffff", "#111111"] },
+      { name: "Montevideo City Torque", city: "Montevideo", colors: ["#6cabdd", "#111111"] },
+      { name: "Racing Montevideo", city: "Montevideo", colors: ["#6cabdd", "#ffffff"] },
+      { name: "Cerro Largo", city: "Melo", colors: ["#046a38", "#ffffff"] },
+      { name: "Boston River", city: "Montevideo", colors: ["#c8102e", "#111111"] },
+      { name: "Progreso", city: "Montevideo", colors: ["#c8102e", "#ffffff"] },
+      { name: "Plaza Colonia", city: "Colonia", colors: ["#f4c430", "#046a38"] },
+      { name: "Miramar Misiones", city: "Montevideo", colors: ["#0a3d91", "#f4c430"] },
+      { name: "Juventud", city: "Las Piedras", colors: ["#046a38", "#ffffff"] },
+      { name: "Cerro", city: "Montevideo", colors: ["#0a3d91", "#ffffff"] },
+      { name: "Rampla Juniors", city: "Montevideo", colors: ["#046a38", "#c8102e"] },
+      { name: "River Plate Montevideo", city: "Montevideo", colors: ["#c8102e", "#ffffff"] },
+    ],
+  },
+];

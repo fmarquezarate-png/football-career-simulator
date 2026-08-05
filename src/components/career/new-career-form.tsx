@@ -2,7 +2,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Dices, Loader2, Shuffle } from "lucide-react";
+import { Dices, Globe, Loader2, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import {
   type Difficulty, type Position, type PreferredFoot,
 } from "@/lib/data/types";
 import { DIFFICULTY_ORDER, DIFFICULTY_PROFILES } from "@/lib/data/difficulty";
-import { TIER_LABEL, tierOdds } from "@/lib/engine/clubAssignment";
+import { TIER_LABEL, originOdds, tierOdds } from "@/lib/engine/clubAssignment";
 import { newCareer } from "@/lib/engine/careerEngine";
 import { findNationality } from "@/lib/data/nationalities";
 import { saveLocalCareer } from "@/lib/storage/local";
@@ -37,6 +37,7 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
 
   const profile = DIFFICULTY_PROFILES[difficulty];
   const odds = useMemo(() => tierOdds(difficulty), [difficulty]);
+  const origins = useMemo(() => originOdds(nationality, difficulty), [nationality, difficulty]);
 
   /** Nombre aleatorio del pool de la nacionalidad elegida. */
   function randomName() {
@@ -211,13 +212,32 @@ export function NewCareerForm({ countries }: { countries: CountryOption[] }) {
 
       {/* 3 · Sorteo */}
       <section className="card-glass rounded-2xl p-6">
-        <StepTitle n={3} title="El sorteo decide tu club" />
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          No eliges equipo. Al empezar, el motor sortea tu club de debut entre
-          las 5 grandes ligas siguiendo las probabilidades de arriba. Puede
-          tocarte un gigante europeo o un modesto peleando por no bajar — a
-          partir de ahí, los traspasos te los ganas en el campo.
+        <StepTitle n={3} title="El sorteo decide dónde debutas" />
+        <p className="mb-4 text-sm leading-relaxed text-muted-foreground">
+          No eliges equipo. Primero se sortea el <strong>país</strong>: como en
+          la vida real, lo normal es empezar en la liga de tu nacionalidad, y
+          salir fuera depende de lo bueno que seas. Después se sortea el club
+          dentro de esa liga con las probabilidades de arriba.
         </p>
+
+        <p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <Globe className="h-3.5 w-3.5" /> Dónde es probable que debutes
+        </p>
+        <ul className="space-y-2">
+          {origins.map(o => (
+            <li key={o.leagueId} className="flex items-center gap-2.5">
+              <Image
+                src={flagUrl(o.countryCode, 40)} alt="" width={22} height={15}
+                unoptimized className="shrink-0 rounded-[2px]"
+              />
+              <span className="w-28 shrink-0 truncate text-sm">{o.country}</span>
+              <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
+                <span className="block h-full rounded-full bg-primary" style={{ width: `${o.pct}%` }} />
+              </span>
+              <span className="w-9 shrink-0 text-right text-xs font-bold tabular-nums">{o.pct}%</span>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">

@@ -2,10 +2,11 @@ import type {
   AppliedEventOutcome, CareerSeasonStats, CareerState, Difficulty, EventTemplate,
   Position, PreferredFoot,
 } from "../data/types";
-import { getLeague, getAllLeagues } from "../data/loader";
+import { getLeague, getAllLeagues, getTeam, findTeamByName } from "../data/loader";
 import { DIFFICULTY_PROFILES } from "../data/difficulty";
-import { assignStartingClub, type ClubTier } from "./clubAssignment";
-import { makeRng, clamp, type Rng } from "./rng";
+import { assignStartingClub, leagueStrength, type ClubTier } from "./clubAssignment";
+import { makeRng, clamp, normal, type Rng } from "./rng";
+import { penaltyOutcomeEffects, type PenaltyContext, type PenaltyResult } from "./penalty";
 import {
   applyOverallDeltaToAttributes, capToPotential, evolveAttributes,
   initialAttributes, overallFromAttributes,
@@ -38,7 +39,7 @@ export interface NewCareerParams {
 export function newCareer(params: NewCareerParams): CareerState {
   const rng = makeRng(params.seed ?? `${params.playerName}-${Date.now()}`);
   const profile = DIFFICULTY_PROFILES[params.difficulty];
-  const { team, league, tier } = assignStartingClub(rng, params.difficulty);
+  const { team, league, tier } = assignStartingClub(rng, params.difficulty, params.nationality);
   const targetOverall = clamp(profile.startOverall + Math.floor(rng() * 6), 45, 85);
   // El OVR sale de los atributos, no al revés: así cualquier cambio posterior
   // en un atributo se refleja en la media.
@@ -76,6 +77,44 @@ export function newCareer(params: NewCareerParams): CareerState {
     awards: [],
     trophies: [],
     currentSeasonEventsRemaining: EVENTS_PER_SEASON,
+  };
+}
+
+/**
+ * Recupera una carrera guardada con un catálogo de ligas anterior.
+ *
+ * Al pasar de 5 a 33 ligas los identificadores de equipo cambiaron, así que
+ * una partida vieja apunta a clubes que ya no existen y el panel reventaría al
+ * no encontrarlos. Se reasigna por nombre y, si tampoco cuadra, al club más
+ * parecido en nivel dentro de la liga del jugador.
+ */
+export function migrateCareer(state: CareerState): CareerState {
+  if (getTeam(state.currentTeamId)) return state;
+
+  const byName = findTeamByName(state.currentTeamName);
+  const target = byName ?? (() => {
+    const league = getLeague(state.currentLeagueId) ?? getAllLeagues()[0];
+    const team = [...league.teams].sort(
+      (a, b) => Math.abs(a.overall - state.overall) - Math.abs(b.overall - state.overall),
+    )[0];
+    return { league, team };
+  })();
+
+  return {
+    ...state,
+    currentTeamId: target.team.id,
+    currentTeamName: target.team.name,
+    currentLeagueId: target.league.id,
+    // El histórico conserva los nombres; solo se reapuntan los identificadores
+    // para que los escudos vuelvan a resolverse.
+    history: state.history.map(h => ({
+      ...h,
+      teamId: findTeamByName(h.teamName)?.team.id ?? target.team.id,
+    })),
+    contracts: state.contracts.map(c => ({
+      ...c,
+      teamId: findTeamByName(c.teamName)?.team.id ?? c.teamId,
+    })),
   };
 }
 
@@ -137,6 +176,38 @@ function amplifyDownside(o: AppliedEventOutcome, variance: number): AppliedEvent
     reputationDelta: down(o.reputationDelta),
     overallDelta: down(o.overallDelta),
     fitnessDelta: down(o.fitnessDelta),
+  };
+}
+
+/**
+ * ¿Toca penalti decisivo esta temporada?
+ *
+ * Es un momento excepcional, no un evento de cada año: hace falta jugar en un
+ * club con opciones y tener peso en el equipo. Cuando ocurre, el escenario se
+ * elige según lo lejos que llegue tu club.
+ */
+export function penaltyChance(state: CareerState): PenaltyContext | null {
+  if (state.position === "GK") return null;
+  const team = getTeam(state.currentTeamId);
+  if (!team) return null;
+
+  const rng = makeRng(`penalty-${state.playerName}-${state.seasonNumber}`);
+  const strength = leagueStrength(state.currentLeagueId);
+  const tier = team.team.overall;
+
+  // Cuanto mejor el club y más peso tengas, más probable llegar a una final.
+  const base = clamp((tier - 62) / 120 + (state.reputation - 40) / 400, 0.02, 0.3);
+  if (rng() > base) return null;
+
+  const european = strength >= 70 && tier >= 76;
+  const competition = european
+    ? (rng() < 0.5 ? "Final de la UEFA Champions League" : "Final de la Copa nacional")
+    : "Final de la Copa nacional";
+
+  return {
+    competition,
+    stakes: "Tanda de penaltis, empate a todo. Te toca a ti. Sesenta mil personas conteniendo la respiración.",
+    keeper: Math.round(clamp(normal(rng, tier + 4, 5), 60, 92)),
   };
 }
 
@@ -229,6 +300,18 @@ export function endSeason(state: CareerState): EndSeasonResult {
 
   const offers = generateOffers(rng, newState);
   return { state: newState, season: seasonStats, offers };
+}
+
+/** Traslada el desenlace del penalti decisivo al estado de la carrera. */
+export function applyPenalty(state: CareerState, result: PenaltyResult): CareerState {
+  const e = penaltyOutcomeEffects(result);
+  return {
+    ...state,
+    seasonStats: { ...state.seasonStats, goals: state.seasonStats.goals + (e.goals ?? 0) },
+    reputation: clamp(state.reputation + (e.reputation ?? 0), 0, 100),
+    morale: clamp(state.morale + (e.morale ?? 0), 0, 100),
+    penaltyTakenSeason: state.seasonNumber,
+  };
 }
 
 /** Aceptar oferta => actualizar contrato y equipo. */

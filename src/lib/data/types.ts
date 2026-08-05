@@ -55,13 +55,10 @@ export interface LeagueIndexEntry {
   country: string;
   countryCode: string;
   confederation: string;
-  tier: number;
+  /** Nivel medio de la liga (0-100). Gobierna el salto entre competiciones. */
+  strength: number;
   teams: number;
   rounds: number;
-  reputation: number;
-  prestige: number;
-  domesticCup: { id: string; name: string };
-  continentalCup: string;
 }
 
 export interface League {
@@ -69,6 +66,8 @@ export interface League {
   name: string;
   country: string;
   countryCode: string;
+  confederation: string;
+  strength: number;
   season: string;
   rounds: number;
   teams: Team[];
@@ -271,4 +270,6 @@ export interface CareerState {
    * temporada. Se poda a los ~24 más recientes.
    */
   recentEventKeys?: string[];
+  /** Última temporada en la que ya se jugó el penalti decisivo. */
+  penaltyTakenSeason?: number;
 }

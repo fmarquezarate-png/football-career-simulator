@@ -7,8 +7,11 @@ import { POSITION_LABEL } from "@/lib/data/types";
 import { flagUrl, getTeam } from "@/lib/data/loader";
 import { clearLocalCareer, saveLocalCareer } from "@/lib/storage/local";
 import {
-  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam, EVENTS_PER_SEASON, type ContractOffer,
+  endSeason, nextSeasonEvents, resolveEvent, acceptOffer, stayCurrentTeam,
+  penaltyChance, applyPenalty, EVENTS_PER_SEASON, type ContractOffer,
 } from "@/lib/engine/careerEngine";
+import { shootPenalty, type PenaltyContext, type PenaltyResult } from "@/lib/engine/penalty";
+import { makeRng } from "@/lib/engine/rng";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +23,7 @@ import { safestChoice } from "@/lib/engine/events";
 import { CareerTimeline } from "./career-timeline";
 import { TrophyCase } from "./trophy-art";
 import { EventChoiceDialog } from "./event-dialog";
+import { PenaltyDialog } from "./penalty-dialog";
 import { OffersDialog } from "./offers-dialog";
 import { SeasonSummaryDialog } from "./season-summary-dialog";
 import { SyncButton } from "./sync-button";
@@ -38,6 +42,11 @@ export function CareerDashboard({ initialState, onChange }: {
    */
   const [eventIndex, setEventIndex] = useState(0);
   const [offers, setOffers] = useState<ContractOffer[] | null>(null);
+  /**
+   * Penalti decisivo de la temporada. Se comprueba una vez agotadas las
+   * decisiones y antes de cerrar, para que sea el clímax de la temporada.
+   */
+  const [penalty, setPenalty] = useState<PenaltyContext | null>(null);
   const [lastSummary, setLastSummary] = useState<CareerState["history"][number] | null>(null);
 
   const teamInfo = useMemo(() => getTeam(state.currentTeamId), [state.currentTeamId]);
@@ -52,11 +61,24 @@ export function CareerDashboard({ initialState, onChange }: {
     // No cargar las decisiones de la temporada siguiente mientras siga abierto
     // el cierre de la anterior: si no, el diálogo de eventos se monta encima y
     // las ofertas de fichaje asoman de fondo antes de que toque decidirlas.
-    if (offers || lastSummary) return;
+    if (offers || lastSummary || penalty) return;
     if (queue.length === 0 && state.currentSeasonEventsRemaining > 0) {
       setQueue(nextSeasonEvents(state));
     }
-  }, [state, queue.length, offers, lastSummary]);
+  }, [state, queue.length, offers, lastSummary, penalty]);
+
+  /**
+   * El penalti decisivo cierra la temporada, justo cuando ya no quedan
+   * decisiones. Se comprueba aquí y no al resolver la última elección porque
+   * los eventos llegan en lotes de tres: el final de la tanda no coincide con
+   * el final de la temporada.
+   */
+  useEffect(() => {
+    if (penalty || offers || lastSummary) return;
+    if (state.currentSeasonEventsRemaining > 0) return;
+    if (state.penaltyTakenSeason === state.seasonNumber) return;
+    setPenalty(penaltyChance(state));
+  }, [state, penalty, offers, lastSummary]);
 
   /**
    * Resuelve la elección en el motor y persiste el nuevo estado, pero **no**
@@ -72,6 +94,16 @@ export function CareerDashboard({ initialState, onChange }: {
   function handleContinue() {
     setQueue(q => q.slice(1));
     setEventIndex(i => i + 1);
+  }
+
+  function handlePenaltyShot(zone: Parameters<typeof shootPenalty>[1], power: Parameters<typeof shootPenalty>[2]) {
+    const rng = makeRng(`pk-${state.playerName}-${state.seasonNumber}-${Date.now()}`);
+    return shootPenalty(rng, zone, power, state, penalty!);
+  }
+
+  function handlePenaltyDone(result: PenaltyResult) {
+    update(applyPenalty(state, result));
+    setPenalty(null);
   }
 
   function handleEndSeason() {
@@ -111,7 +143,7 @@ export function CareerDashboard({ initialState, onChange }: {
   }
 
   // Las decisiones se pausan mientras el cierre de temporada esté en pantalla.
-  const currentEvent = offers || lastSummary ? undefined : queue[0];
+  const currentEvent = offers || lastSummary || penalty ? undefined : queue[0];
 
   return (
     <div className="container py-6 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -332,6 +364,15 @@ export function CareerDashboard({ initialState, onChange }: {
           total={EVENTS_PER_SEASON}
         />
       )}
+      {penalty && (
+        <PenaltyDialog
+          state={state}
+          context={penalty}
+          onShoot={handlePenaltyShot}
+          onContinue={handlePenaltyDone}
+        />
+      )}
+
       {/* Cierre de temporada: primero el resumen, y solo al cerrarlo, las ofertas. */}
       {lastSummary && (
         <SeasonSummaryDialog summary={lastSummary} onClose={() => setLastSummary(null)} />

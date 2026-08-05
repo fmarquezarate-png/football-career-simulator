@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CareerDashboard } from "@/components/career/dashboard";
 import { AppNav } from "@/components/nav/app-nav";
-import { loadLocalCareer } from "@/lib/storage/local";
+import { loadLocalCareer, saveLocalCareer } from "@/lib/storage/local";
+import { migrateCareer } from "@/lib/engine/careerEngine";
 import type { CareerState } from "@/lib/data/types";
 import { Button } from "@/components/ui/button";
 
@@ -12,7 +13,14 @@ export default function CareerPage() {
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setState(loadLocalCareer());
+    const saved = loadLocalCareer();
+    if (saved) {
+      // Las partidas anteriores al catálogo de 33 ligas apuntan a clubes que
+      // ya no existen: se reasignan antes de pintar nada.
+      const migrated = migrateCareer(saved);
+      if (migrated !== saved) saveLocalCareer(migrated);
+      setState(migrated);
+    }
     setLoaded(true);
   }, []);
 

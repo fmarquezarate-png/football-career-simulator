@@ -11,7 +11,15 @@ de Oro, disputa el Mundial y comparte tu carrera con amigos.
 
 ## 🎮 Qué incluye
 
-- 5 ligas top con equipos, escudos y ratings (LaLiga, Premier, Bundesliga, Serie A, Ligue 1)
+- **33 ligas y 524 equipos** de todo el mundo. Las 24 europeas con escudos
+  reales; Brasil, Argentina, México, Arabia Saudí, Estados Unidos, Japón,
+  Colombia, Chile y Uruguay con escudos generados a partir de los colores
+  reales de cada club.
+- **Dónde debutas lo decide tu nacionalidad.** Un chileno empieza en Chile el
+  74 % de las veces; salir fuera depende de la dificultad, y lo normal es ir
+  antes a Argentina o Brasil que a Europa.
+- **El penalti decisivo**: en una final eliges esquina y tipo de disparo
+  mientras el portero elige a la vez.
 - **205 países jugables** (miembros FIFA + selecciones británicas), con
   generador de nombres por región lingüística
 - **El club de debut se sortea**: no lo eliges. Cada dificultad define una
@@ -156,17 +164,20 @@ Los escudos viven en `public/crests/<teamId>.png` y se sirven desde el propio
 dominio. **No se enlazan desde Wikipedia**: `upload.wikimedia.org` responde 403
 al hotlinking desde otro dominio, así que enlazados no cargaban nunca.
 
-Para regenerarlos:
+Las 24 ligas europeas usan el escudo real del club. Las nueve de fuera de
+Europa usan un escudo generado a partir de los colores reales de cada club: la
+única fuente abierta que encontramos cubre solo las competiciones europeas.
+
+Para regenerar todo el catálogo de ligas, equipos y escudos:
 
 ```bash
 git clone --depth 1 https://github.com/luukhopman/football-logos /tmp/fl
-node scripts/sync-crests.mjs /tmp/fl
+node scripts/build-leagues.mjs /tmp/fl
 ```
 
-El script empareja cada club con su escudo por similitud de nombre (ignorando
-acentos y sufijos societarios), tira del histórico de temporadas para los
-clubes que hoy están en segunda, verifica que no haya ids de equipo duplicados
-y falla si algún club se queda sin escudo.
+Las ligas se definen en [`scripts/leagues.config.mjs`](scripts/leagues.config.mjs):
+la fuerza de cada competición gobierna la media de sus equipos, sus
+presupuestos y lo difícil que es dar el salto desde ella.
 
 ## 🧪 Comandos
 

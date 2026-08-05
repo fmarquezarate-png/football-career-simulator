@@ -1,7 +1,332 @@
 [
-  { "id": "es1", "name": "LaLiga", "country": "España", "countryCode": "es", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 95, "prestige": 95, "domesticCup": { "id": "copa_rey", "name": "Copa del Rey" }, "continentalCup": "uefa_ucl" },
-  { "id": "en1", "name": "Premier League", "country": "Inglaterra", "countryCode": "gb-eng", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 98, "prestige": 96, "domesticCup": { "id": "fa_cup", "name": "FA Cup" }, "continentalCup": "uefa_ucl" },
-  { "id": "de1", "name": "Bundesliga", "country": "Alemania", "countryCode": "de", "confederation": "UEFA", "tier": 1, "teams": 18, "rounds": 34, "reputation": 92, "prestige": 90, "domesticCup": { "id": "dfb_pokal", "name": "DFB-Pokal" }, "continentalCup": "uefa_ucl" },
-  { "id": "it1", "name": "Serie A", "country": "Italia", "countryCode": "it", "confederation": "UEFA", "tier": 1, "teams": 20, "rounds": 38, "reputation": 91, "prestige": 92, "domesticCup": { "id": "coppa_italia", "name": "Coppa Italia" }, "continentalCup": "uefa_ucl" },
-  { "id": "fr1", "name": "Ligue 1", "country": "Francia", "countryCode": "fr", "confederation": "UEFA", "tier": 1, "teams": 18, "rounds": 34, "reputation": 88, "prestige": 85, "domesticCup": { "id": "coupe_france", "name": "Coupe de France" }, "continentalCup": "uefa_ucl" }
+  {
+    "id": "en1",
+    "name": "Premier League",
+    "country": "Inglaterra",
+    "countryCode": "gb-eng",
+    "confederation": "UEFA",
+    "strength": 90,
+    "teams": 20,
+    "rounds": 38
+  },
+  {
+    "id": "es1",
+    "name": "LaLiga",
+    "country": "España",
+    "countryCode": "es",
+    "confederation": "UEFA",
+    "strength": 88,
+    "teams": 20,
+    "rounds": 38
+  },
+  {
+    "id": "it1",
+    "name": "Serie A",
+    "country": "Italia",
+    "countryCode": "it",
+    "confederation": "UEFA",
+    "strength": 84,
+    "teams": 20,
+    "rounds": 38
+  },
+  {
+    "id": "de1",
+    "name": "Bundesliga",
+    "country": "Alemania",
+    "countryCode": "de",
+    "confederation": "UEFA",
+    "strength": 84,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "fr1",
+    "name": "Ligue 1",
+    "country": "Francia",
+    "countryCode": "fr",
+    "confederation": "UEFA",
+    "strength": 80,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "pt1",
+    "name": "Liga Portugal",
+    "country": "Portugal",
+    "countryCode": "pt",
+    "confederation": "UEFA",
+    "strength": 75,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "nl1",
+    "name": "Eredivisie",
+    "country": "Países Bajos",
+    "countryCode": "nl",
+    "confederation": "UEFA",
+    "strength": 73,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "tr1",
+    "name": "Süper Lig",
+    "country": "Turquía",
+    "countryCode": "tr",
+    "confederation": "UEFA",
+    "strength": 71,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "be1",
+    "name": "Jupiler Pro League",
+    "country": "Bélgica",
+    "countryCode": "be",
+    "confederation": "UEFA",
+    "strength": 70,
+    "teams": 18,
+    "rounds": 30
+  },
+  {
+    "id": "at1",
+    "name": "Bundesliga austríaca",
+    "country": "Austria",
+    "countryCode": "at",
+    "confederation": "UEFA",
+    "strength": 66,
+    "teams": 12,
+    "rounds": 32
+  },
+  {
+    "id": "ch1",
+    "name": "Super League",
+    "country": "Suiza",
+    "countryCode": "ch",
+    "confederation": "UEFA",
+    "strength": 66,
+    "teams": 12,
+    "rounds": 33
+  },
+  {
+    "id": "gr1",
+    "name": "Super League",
+    "country": "Grecia",
+    "countryCode": "gr",
+    "confederation": "UEFA",
+    "strength": 66,
+    "teams": 14,
+    "rounds": 26
+  },
+  {
+    "id": "sco1",
+    "name": "Scottish Premiership",
+    "country": "Escocia",
+    "countryCode": "gb-sct",
+    "confederation": "UEFA",
+    "strength": 65,
+    "teams": 12,
+    "rounds": 38
+  },
+  {
+    "id": "cz1",
+    "name": "Chance Liga",
+    "country": "Chequia",
+    "countryCode": "cz",
+    "confederation": "UEFA",
+    "strength": 64,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "dk1",
+    "name": "Superliga",
+    "country": "Dinamarca",
+    "countryCode": "dk",
+    "confederation": "UEFA",
+    "strength": 64,
+    "teams": 12,
+    "rounds": 32
+  },
+  {
+    "id": "pl1",
+    "name": "Ekstraklasa",
+    "country": "Polonia",
+    "countryCode": "pl",
+    "confederation": "UEFA",
+    "strength": 63,
+    "teams": 18,
+    "rounds": 34
+  },
+  {
+    "id": "hr1",
+    "name": "SuperSport HNL",
+    "country": "Croacia",
+    "countryCode": "hr",
+    "confederation": "UEFA",
+    "strength": 63,
+    "teams": 10,
+    "rounds": 36
+  },
+  {
+    "id": "ua1",
+    "name": "Premier Liga",
+    "country": "Ucrania",
+    "countryCode": "ua",
+    "confederation": "UEFA",
+    "strength": 63,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "rs1",
+    "name": "Super liga",
+    "country": "Serbia",
+    "countryCode": "rs",
+    "confederation": "UEFA",
+    "strength": 62,
+    "teams": 14,
+    "rounds": 30
+  },
+  {
+    "id": "no1",
+    "name": "Eliteserien",
+    "country": "Noruega",
+    "countryCode": "no",
+    "confederation": "UEFA",
+    "strength": 62,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "se1",
+    "name": "Allsvenskan",
+    "country": "Suecia",
+    "countryCode": "se",
+    "confederation": "UEFA",
+    "strength": 62,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "ro1",
+    "name": "SuperLiga",
+    "country": "Rumanía",
+    "countryCode": "ro",
+    "confederation": "UEFA",
+    "strength": 61,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "il1",
+    "name": "Ligat ha'Al",
+    "country": "Israel",
+    "countryCode": "il",
+    "confederation": "UEFA",
+    "strength": 60,
+    "teams": 14,
+    "rounds": 26
+  },
+  {
+    "id": "bg1",
+    "name": "efbet Liga",
+    "country": "Bulgaria",
+    "countryCode": "bg",
+    "confederation": "UEFA",
+    "strength": 58,
+    "teams": 14,
+    "rounds": 26
+  },
+  {
+    "id": "br1",
+    "name": "Brasileirão",
+    "country": "Brasil",
+    "countryCode": "br",
+    "confederation": "CONMEBOL",
+    "strength": 76,
+    "teams": 16,
+    "rounds": 38
+  },
+  {
+    "id": "ar1",
+    "name": "Liga Profesional",
+    "country": "Argentina",
+    "countryCode": "ar",
+    "confederation": "CONMEBOL",
+    "strength": 70,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "mx1",
+    "name": "Liga MX",
+    "country": "México",
+    "countryCode": "mx",
+    "confederation": "CONCACAF",
+    "strength": 68,
+    "teams": 16,
+    "rounds": 34
+  },
+  {
+    "id": "sa1",
+    "name": "Saudi Pro League",
+    "country": "Arabia Saudí",
+    "countryCode": "sa",
+    "confederation": "AFC",
+    "strength": 69,
+    "teams": 16,
+    "rounds": 34
+  },
+  {
+    "id": "us1",
+    "name": "Major League Soccer",
+    "country": "Estados Unidos",
+    "countryCode": "us",
+    "confederation": "CONCACAF",
+    "strength": 65,
+    "teams": 16,
+    "rounds": 34
+  },
+  {
+    "id": "jp1",
+    "name": "J1 League",
+    "country": "Japón",
+    "countryCode": "jp",
+    "confederation": "AFC",
+    "strength": 65,
+    "teams": 16,
+    "rounds": 34
+  },
+  {
+    "id": "co1",
+    "name": "Categoría Primera A",
+    "country": "Colombia",
+    "countryCode": "co",
+    "confederation": "CONMEBOL",
+    "strength": 61,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "cl1",
+    "name": "Primera División",
+    "country": "Chile",
+    "countryCode": "cl",
+    "confederation": "CONMEBOL",
+    "strength": 59,
+    "teams": 16,
+    "rounds": 30
+  },
+  {
+    "id": "uy1",
+    "name": "Primera División",
+    "country": "Uruguay",
+    "countryCode": "uy",
+    "confederation": "CONMEBOL",
+    "strength": 59,
+    "teams": 16,
+    "rounds": 30
+  }
 ]
