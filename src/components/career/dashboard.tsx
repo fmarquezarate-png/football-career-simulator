@@ -17,11 +17,14 @@ import { ATTRIBUTE_KEYS, ATTRIBUTE_LABEL, type AttributeKey } from "@/lib/engine
 import { safestChoice } from "@/lib/engine/events";
 import { CareerTable } from "./career-table";
 import { DecisionPanel } from "./decision-panel";
+import { TransferMarket } from "./transfer-market";
+import { CareerEnd, ShareCareerDialog } from "./career-end";
 import { TrophyCase } from "./trophy-art";
 import { PenaltyDialog } from "./penalty-dialog";
-import { OffersDialog } from "./offers-dialog";
 import { SeasonSummaryDialog } from "./season-summary-dialog";
 import { SyncButton } from "./sync-button";
+import { useSession } from "@/lib/supabase/use-session";
+import { saveCloudCareer, togglePublic } from "@/lib/storage/cloud";
 import { ChevronDown, Home, RefreshCcw } from "lucide-react";
 
 /**
@@ -54,6 +57,11 @@ export function CareerDashboard({ initialState, onChange }: {
    */
   const [penalty, setPenalty] = useState<PenaltyContext | null>(null);
   const [lastSummary, setLastSummary] = useState<CareerState["history"][number] | null>(null);
+  /** Ficha final para compartir. Se abre desde el panel de fin de carrera. */
+  const [sharing, setSharing] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [sharingBusy, setSharingBusy] = useState(false);
+  const { user } = useSession();
 
   const update = useCallback((next: CareerState) => {
     setState(next);
@@ -129,15 +137,38 @@ export function CareerDashboard({ initialState, onChange }: {
     setOffers(null);
   }
 
+  /**
+   * El enlace público de la ficha final. Solo se puede crear con sesión
+   * iniciada, porque vive en Supabase; en modo invitado la ficha se ve igual
+   * pero sin enlace que compartir.
+   */
+  async function createShareLink() {
+    if (!user || shareUrl || sharingBusy) return;
+    setSharingBusy(true);
+    try {
+      let s = state;
+      if (!s.id) { s = await saveCloudCareer(s, user.id); update(s); }
+      if (!s.id) return;
+      const slug = await togglePublic(s.id, true);
+      setShareUrl(`${window.location.origin}/career/share/${slug}`);
+    } finally {
+      setSharingBusy(false);
+    }
+  }
+
   function resetCareer() {
     if (!confirm("¿Seguro que quieres borrar tu carrera guardada?")) return;
     clearLocalCareer();
     window.location.href = "/";
   }
 
-  // Mientras un modal esté en pantalla, la decisión espera su turno.
-  const blocked = Boolean(offers || lastSummary || penalty);
-  const currentEvent = blocked ? undefined : queue[0];
+  /**
+   * Orden de la zona de acción, de arriba abajo de la temporada: primero se
+   * decide, luego se juega, luego se ficha. Solo una cosa a la vez, y siempre
+   * en el mismo sitio bajo la tabla.
+   */
+  const blocked = Boolean(lastSummary || penalty);
+  const currentEvent = blocked || offers || state.isRetired ? undefined : queue[0];
 
   return (
     <div className="container max-w-5xl py-4 sm:py-6">
@@ -178,23 +209,27 @@ export function CareerDashboard({ initialState, onChange }: {
               total={EVENTS_PER_SEASON}
             />
           ) : state.isRetired ? (
-            <section className="rounded-2xl border border-white/10 bg-card/60 p-6 text-center">
-              <p className="text-lg font-black">Carrera terminada</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {state.totals.goals} goles y {state.totals.assists} asistencias en {state.history.length} temporadas.
-              </p>
-            </section>
+            <CareerEnd state={state} onShare={() => setSharing(true)} />
+          ) : offers && !blocked ? (
+            <TransferMarket
+              offers={offers}
+              currentTeamId={state.currentTeamId}
+              currentTeamName={state.currentTeamName}
+              onChoose={chooseOffer}
+            />
           ) : !blocked ? (
-            <Button size="lg" className="w-full" onClick={handleEndSeason}>
-              Jugar la temporada {state.seasonNumber} →
-            </Button>
+            <>
+              <Button size="lg" className="w-full" onClick={handleEndSeason}>
+                Jugar la temporada {state.seasonNumber} →
+              </Button>
+              {state.currentSeasonEventsRemaining > 0 && (
+                <p className="text-center text-xs text-muted-foreground">
+                  Te quedan {state.currentSeasonEventsRemaining} decisiones; si juegas ya, se
+                  resuelven solas por la vía conservadora.
+                </p>
+              )}
+            </>
           ) : null}
-
-          {!currentEvent && !state.isRetired && state.currentSeasonEventsRemaining > 0 && !blocked && (
-            <p className="text-center text-xs text-muted-foreground">
-              Te quedan {state.currentSeasonEventsRemaining} decisiones; si cierras ahora se resuelven solas por la vía conservadora.
-            </p>
-          )}
         </div>
 
         <Details state={state} />
@@ -209,12 +244,19 @@ export function CareerDashboard({ initialState, onChange }: {
         />
       )}
 
-      {/* Cierre de temporada: primero el resumen, y solo al cerrarlo, las ofertas. */}
+      {/* Cierre de temporada: el resumen sí para el mundo; el mercado, no. */}
       {lastSummary && (
         <SeasonSummaryDialog summary={lastSummary} onClose={() => setLastSummary(null)} />
       )}
-      {offers && !lastSummary && (
-        <OffersDialog offers={offers} currentTeamId={state.currentTeamId} onChoose={chooseOffer} />
+
+      {sharing && (
+        <ShareCareerDialog
+          state={state}
+          onClose={() => setSharing(false)}
+          shareUrl={shareUrl}
+          onCopyLink={createShareLink}
+          busy={sharingBusy}
+        />
       )}
     </div>
   );

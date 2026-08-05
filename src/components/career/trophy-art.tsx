@@ -119,12 +119,12 @@ function Shape({ kind }: { kind: TrophyKind }) {
 
     /* Supercopa: plato / bandeja. */
     case "supercup":
+      // Escudo, no copa: es lo que son la Community Shield y las supercopas en
+      // el imaginario, y a tamaño pequeño se distingue de la copa de un golpe.
       return (
         <g fill={fill}>
-          <ellipse cx="24" cy="26" rx="17" ry="15" />
-          <ellipse cx="24" cy="26" rx="11" ry="9" fillOpacity=".35" />
-          <rect x="21" y="41" width="6" height="7" />
-          <rect x="14" y="48" width="20" height="6" rx="1.5" />
+          <path d="M24 6l16 5v18c0 12-7.5 20.5-16 25-8.5-4.5-16-13-16-25V11z" />
+          <path d="M24 12l10 3.2v13c0 8-4.7 13.6-10 16.6z" fillOpacity=".3" />
         </g>
       );
 

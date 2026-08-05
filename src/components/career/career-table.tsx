@@ -1,11 +1,12 @@
 "use client";
 import Image from "next/image";
+import { Footprints, Shirt, Volleyball } from "lucide-react";
 import type { CareerSeasonStats, CareerState } from "@/lib/data/types";
 import { POSITION_LABEL } from "@/lib/data/types";
 import { flagUrl, getTeam } from "@/lib/data/loader";
 import { resolveNationalTeam } from "@/lib/engine/nationalTeam";
 import { formatValue, marketValue } from "@/lib/engine/marketValue";
-import { TrophyCase } from "./trophy-art";
+import { TrophyIcon } from "./trophy-art";
 import { cn, fmt } from "@/lib/utils";
 
 /**
@@ -57,8 +58,10 @@ export function CareerTable({ state }: { state: CareerState }) {
         {Array.from({ length: LAST_AGE - FIRST_AGE + 1 }, (_, i) => FIRST_AGE + i).map(age => {
           const season = byAge.get(age);
           const isCurrent = age === state.age;
-          // La tabla se corta donde acaba la carrera, sin filas muertas.
-          if (!season && age > state.age + (state.isRetired ? 0 : 9)) return null;
+          // La tabla se corta donde acaba la carrera, sin filas muertas. Una
+          // vez retirado no queda nada por jugar, así que tampoco hay hueco.
+          if (!season && state.isRetired) return null;
+          if (!season && age > state.age + 9) return null;
           return <Row key={age} age={age} season={season} current={isCurrent} state={state} />;
         })}
       </div>
@@ -71,8 +74,8 @@ export function CareerTable({ state }: { state: CareerState }) {
         />
         <span className="min-w-0 truncate text-xs font-semibold sm:text-sm">{nt.name}</span>
         <span />
-        <Metric value={ntTotals.apps} tone="text-emerald-400" />
-        <Metric value={ntTotals.goals} tone="text-foreground" />
+        <Metric value={ntTotals.apps} kind="apps" />
+        <Metric value={ntTotals.goals} kind="goals" />
         <span />
       </div>
     </div>
@@ -102,7 +105,9 @@ function Header({ state }: { state: CareerState }) {
             {POSITION_LABEL[state.position]}
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        {/* `min-w-0` también aquí: sin él, el nombre largo de un club estira
+            la cabecera y saca la página de la pantalla en móvil. */}
+        <div className="flex min-w-0 items-center gap-2">
           {team && (
             <Image
               src={team.team.crest} alt="" width={22} height={22}
@@ -170,9 +175,16 @@ function Row({
         <span className={cn("truncate text-xs sm:text-sm", pending && "text-muted-foreground/60")}>
           {teamName}
         </span>
+        {/* Los trofeos de la temporada, junto al club y muy pequeños: son un
+            adorno de la fila, no pueden comerse el nombre del equipo. */}
         {trophies.length > 0 && (
-          <span className="shrink-0">
-            <TrophyCase trophies={trophies} size="sm" />
+          <span className="flex shrink-0 items-center gap-0.5" title={trophies.join(" · ")}>
+            {trophies.slice(0, 3).map((t, i) => (
+              <TrophyIcon key={`${t}-${i}`} name={t} className="h-4 w-4" />
+            ))}
+            {trophies.length > 3 && (
+              <span className="text-[9px] font-bold text-muted-foreground">+{trophies.length - 3}</span>
+            )}
           </span>
         )}
       </span>
@@ -185,17 +197,30 @@ function Row({
           : <span className="text-muted-foreground/30">·</span>}
       </span>
 
-      <Metric value={season?.apps} tone="text-emerald-400" />
-      <Metric value={season?.goals} tone="text-foreground" />
-      <Metric value={season?.assists} tone="text-foreground" />
+      <Metric value={season?.apps} kind="apps" />
+      <Metric value={season?.goals} kind="goals" />
+      <Metric value={season?.assists} kind="assists" />
     </div>
   );
 }
 
-function Metric({ value, tone }: { value?: number; tone: string }) {
+/**
+ * Un icono diminuto delante de cada número. Con seis columnas de cifras a
+ * tamaño de móvil, el icono es lo que deja leer la tabla de un vistazo sin
+ * tener que subir a la cabecera.
+ */
+const METRIC_ART = {
+  apps: { Icon: Shirt, tone: "text-emerald-400" },
+  goals: { Icon: Volleyball, tone: "text-foreground" },
+  assists: { Icon: Footprints, tone: "text-foreground" },
+} as const;
+
+function Metric({ value, kind }: { value?: number; kind: keyof typeof METRIC_ART }) {
   if (value === undefined) return <span className="text-center text-muted-foreground/30">·</span>;
+  const { Icon, tone } = METRIC_ART[kind];
   return (
-    <span className={cn("text-center text-xs font-bold tabular-nums sm:text-sm", tone)}>
+    <span className={cn("flex items-center justify-center gap-0.5 text-xs font-bold tabular-nums sm:text-sm", tone)}>
+      <Icon className="h-2.5 w-2.5 shrink-0 opacity-50 sm:h-3 sm:w-3" aria-hidden />
       {fmt(value)}
     </span>
   );
@@ -232,10 +257,16 @@ function OverallChip({ value, muted }: { value: number; muted?: boolean }) {
   );
 }
 
+/**
+ * Oro, plata y bronce, como las chapas de las fichas de jugador. Se leyó mejor
+ * que la rampa verde-ámbar-naranja que había: el color dice de un vistazo en
+ * qué escalón del fútbol estabas cada temporada.
+ */
 function overallTone(v: number): string {
-  if (v >= 85) return "bg-emerald-500 text-emerald-950";
-  if (v >= 78) return "bg-amber-400 text-amber-950";
-  if (v >= 68) return "bg-orange-500 text-orange-950";
-  if (v >= 58) return "bg-orange-700 text-orange-100";
+  if (v >= 86) return "bg-gradient-to-br from-amber-200 to-amber-400 text-amber-950";
+  if (v >= 80) return "bg-amber-400 text-amber-950";
+  if (v >= 72) return "bg-slate-300 text-slate-900";
+  if (v >= 64) return "bg-orange-500 text-orange-950";
+  if (v >= 56) return "bg-orange-700 text-orange-50";
   return "bg-stone-600 text-stone-100";
 }

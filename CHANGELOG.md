@@ -10,6 +10,46 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 
 ## [No publicado]
 
+## [2.8.0] — El final de la carrera
+
+Segunda pasada sobre la referencia, con el vídeo del tramo final: mercado de
+pases, retirada y ficha para compartir.
+
+### Cambiado
+- **El mercado de pases también deja de ser un modal.** Es la última decisión
+  de la temporada y ahora se ve donde se ven las demás: al pie de la tabla,
+  con el mismo lenguaje —tarjetas de club que se encienden al elegirlas y
+  apagan al resto—. Junto a la carrera que las ha provocado, una oferta del
+  Brasileirão después de 20 goles en Chile se lee de otra manera.
+- Como mucho **tres ofertas** más la de quedarse. Con más, elegir club se
+  convertía en rellenar un formulario.
+- **Chapa de media en oro, plata y bronce** en vez de la rampa verde-ámbar. El
+  color dice de un vistazo en qué escalón del fútbol estabas cada temporada.
+- Un icono diminuto delante de cada cifra de la tabla (camiseta, balón, bota):
+  con seis columnas a tamaño de móvil, es lo que la deja leer sin subir a la
+  cabecera.
+- Los trofeos de cada temporada van junto al club, mucho más pequeños y como
+  mucho tres: son un adorno de la fila, no pueden comerse el nombre del equipo.
+- La Community Shield y las supercopas se dibujan como **escudo**, no como
+  copa. A tamaño pequeño la silueta anterior no se distinguía de una copa.
+
+### Añadido
+- **Panel de fin de carrera**: los cuatro números que resumen veinte años
+  —partidos, goles, asistencias y títulos— con la vitrina completa debajo.
+- **Ficha para compartir**, que enseña la *mejor* versión del jugador y no la
+  última: la media y el valor del pico, no los de los 38 años ya de vuelta en
+  casa. Lleva la trayectoria en escudos, un escudo por club sin repetir los
+  regresos, y los títulos. Con sesión iniciada genera enlace público; en modo
+  invitado se ve igual, sin enlace.
+
+### Corregido
+- Un nombre de club largo (RCD Espanyol Barcelona) estiraba la cabecera de la
+  tabla y sacaba la página de la pantalla en móvil: 71 px de scroll lateral.
+- Retirado ya no quedaba una fila fantasma de la temporada siguiente.
+
+### Eliminado
+- `offers-dialog.tsx`, sustituido por el mercado en línea.
+
 ## [2.7.0] — La carrera en una sola pantalla
 
 Rediseño completo de la pantalla de carrera, siguiendo la referencia que pasó
