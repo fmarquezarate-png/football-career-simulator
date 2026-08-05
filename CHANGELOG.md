@@ -10,6 +10,15 @@ Cada entrega se desarrolla y prueba **en escritorio y en móvil** (viewport de
 
 ## [No publicado]
 
+### Seguridad
+- La migración endurece sus dos funciones de trigger, siguiendo el linter de
+  Supabase: `touch_updated_at` fija `search_path` (sin él se puede secuestrar
+  creando objetos homónimos en otro esquema) y ambas revocan el permiso de
+  ejecución de `anon`, `authenticated` y `public`, porque al vivir en el
+  esquema `public` quedaban expuestas como RPC. Los triggers siguen
+  funcionando: se ejecutan como el propietario, no como quien hace la
+  petición.
+
 ### Añadido
 - `scripts/fetch-world-crests.mjs`: descarga los escudos oficiales de las nueve
   ligas de fuera de Europa desde **TheSportsDB** y, como alternativa,

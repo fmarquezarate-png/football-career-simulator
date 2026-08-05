@@ -201,11 +201,26 @@ create policy "Event write by owner" on public.career_events for all using (
 -- =====================================================
 -- Trigger updated_at en careers
 -- =====================================================
+-- `set search_path` fija el esquema: sin él, la función se puede secuestrar
+-- creando objetos con el mismo nombre en un esquema que se resuelva antes.
 create or replace function public.touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger
+language plpgsql
+set search_path = public
+as $$
 begin new.updated_at = now(); return new; end;
 $$;
 
 drop trigger if exists careers_touch on public.careers;
 create trigger careers_touch before update on public.careers
   for each row execute function public.touch_updated_at();
+
+-- =====================================================
+-- Endurecido
+-- =====================================================
+-- Las dos funciones anteriores son disparadores, no API. Al vivir en el
+-- esquema `public` quedan expuestas como RPC en /rest/v1/rpc/… y ejecutables
+-- por cualquiera. Se revoca el permiso: los triggers siguen funcionando
+-- porque se ejecutan como el propietario, no como quien hace la petición.
+revoke all on function public.handle_new_user() from anon, authenticated, public;
+revoke all on function public.touch_updated_at() from anon, authenticated, public;
